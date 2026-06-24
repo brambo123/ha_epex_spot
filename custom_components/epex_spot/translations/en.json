@@ -24,7 +24,9 @@
         "data": {
           "percentage_surcharge": "Percentage Surcharge (%)",
           "absolute_surcharge": "Absolute Surcharge (€/£ per kWh)",
-          "tax": "Tax (%)"
+          "tax": "Tax (%)",
+          "import_template": "Custom import price template. (Overrides other total price calculations)",
+          "export_template": "Custom export price template."
         },
         "data_description": {
           "tax": "Like Value Added Tax (VAT)"
@@ -41,7 +43,9 @@
           "duration": "Slot duration",
           "percentage_surcharge": "Percentage Surcharge (%)",
           "absolute_surcharge": "Absolute Surcharge (€/£ per kWh)",
-          "tax": "Tax (%)"
+          "tax": "Tax (%)",
+          "import_template": "Custom import price template. (Overrides other total price calculations)",
+          "export_template": "Custom export price template."
         },
         "data_description": {
           "tax": "Like Value Added Tax (VAT)"

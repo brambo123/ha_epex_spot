@@ -8,6 +8,7 @@ from typing import List, Tuple
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlowWithReload
 from homeassistant.core import callback
+from homeassistant.helpers.selector import TemplateSelector
 
 from .const import (
     CONF_MARKET_AREA,
@@ -22,6 +23,8 @@ from .const import (
     CONF_SOURCE_HOFER_GRUENSTROM,
     CONF_SURCHARGE_ABS,
     CONF_SURCHARGE_PERC,
+    CONF_TEMPLATE_IMPORT,
+    CONF_TEMPLATE_EXPORT,
     CONF_TAX,
     CONF_TOKEN,
     CONF_DURATION,
@@ -192,6 +195,14 @@ class EpexSpotOptionsFlow(OptionsFlowWithReload):
                             CONF_DURATION, DEFAULT_DURATION
                         ),
                     ): vol.In(durations),
+                    vol.Optional(
+                        CONF_TEMPLATE_IMPORT,
+                        default=self.config_entry.options.get(CONF_TEMPLATE_IMPORT, ""),
+                    ): TemplateSelector(),
+                    vol.Optional(
+                        CONF_TEMPLATE_EXPORT,
+                        default=self.config_entry.options.get(CONF_TEMPLATE_EXPORT, ""),
+                    ): TemplateSelector(),
                 }
             ),
         )

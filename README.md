@@ -65,6 +65,54 @@ In case you would like to install manually:
 
    [![Open your Home Assistant instance and start setting up a new integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start?domain=epex_spot)
 
+
+## Advanced Price Templates
+
+> [!IMPORTANT]
+> **Overriding Default Calculations:** When you provide a custom template for the import price, the integration's built-in total price calculation (including `Surcharge`, `Tax`, etc. configured in the main options) is **completely bypassed** for that custom sensor. Your template must handle all corporate fees, taxes, and VAT manually.
+
+The integration allows you to specify custom templates for **Import** and **Export** prices directly in the integration's Options flow. This is useful for dynamic energy contracts where pricing includes corporate margins, taxes, or time-of-day bonuses.
+
+The templates have access to the following variables:
+* `market_price`: The raw EPEX spot market price per kWh (float).
+* `now()`: A localized Home Assistant `datetime` object representing the specific hour block being evaluated. This allows accurate future forecasts (e.g., in ApexCharts or the Energy Dashboard) based on time-of-day logic.
+
+### Example: NextEnergie (Netherlands)
+
+Here is a comprehensive real-world configuration example for the Dutch energy provider **NextEnergie**.
+
+#### 1. Import Price Template
+The import price consists of the raw market price plus 21% VAT, a fixed purchasing fee (`€0.0219` incl. VAT), and a energy tax specification that automatically applies from January 1st, 2027 onwards.
+
+```jinja2
+{% set import_base = (market_price * 1.21) + 0.0219 %}
+
+{# Energy tax applies from January 1st, 2027 onwards #}
+{% if now().strftime('%Y-%m-%d') >= '2027-01-01' %}
+  {# Replace 0.1234 with the actual government energy tax rate including VAT #}
+  {% set energy_tax = 0.1234 %}
+{% else %}
+  {% set energy_tax = 0.0 %}
+{% endif %}
+
+{{ import_base + energy_tax }}
+```
+
+#### 2. Export Price Template
+The export price consists of the raw market price plus 21% VAT and a fixed export fee (`€0.0000` incl. VAT). Additionally, a Solar Bonus of +50% is added during daytime hours (between 06:00 and 22:00), provided that the base export price is positive.
+
+```jinja2
+{% set export_base = (market_price * 1.21) + 0.0000 %}
+
+{# Solar Bonus: +50% return during daytime hours if the price is positive #}
+{% if 6 <= now().hour < 22 and export_base > 0 %}
+  {{ export_base * 1.50 }}
+{% else %}
+  {{ export_base }}
+{% endif %}
+```
+
+
 ## Sensors
 
 This integration provides the following sensors:
