@@ -54,7 +54,8 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class SourceShell:
-    def __init__(self, config_entry: ConfigEntry, session: aiohttp.ClientSession):
+    def __init__(self, hass, config_entry: ConfigEntry, session: aiohttp.ClientSession):
+        self._hass = hass
         self._config_entry = config_entry
         self._marketdata_now = None
         self._sorted_marketdata_today = []
@@ -206,14 +207,14 @@ class SourceShell:
 
         return round(total_price, 6)
         
-    def _render_custom_template(self, hass, template_str: str, market_price: float, dt_value) -> float:
+    def _render_custom_template(self, template_str: str, market_price: float, dt_value) -> float:
         """Helper to render a custom Jinja2 template with price and datetime context."""
         if not template_str or template_str.strip() == "":
             return market_price
 
         try:
             # Create a Home Assistant Template object
-            compiled_template = template_helper.Template(template_str, hass)
+            compiled_template = template_helper.Template(template_str, self._hass)
             
             # Context variables available to the end-user
             variables = {
@@ -228,26 +229,26 @@ class SourceShell:
             _LOGGER.error("Error rendering price template '%s': %s. Falling back to market price.", template_str, e)
             return market_price
 
-    def get_import_price(self, hass, market_price_per_kwh: float, dt_value=None) -> float:
+    def get_import_price(self, market_price_per_kwh: float, dt_value=None) -> float:
         """Calculate custom import price based on user template or fallback to standard calculation."""
         template_str = self._config_entry.options.get(CONF_TEMPLATE_IMPORT, "")
         
         # If user provided a custom template, use it
         if template_str and template_str.strip() != "":
             target_dt = dt_value if dt_value else dt.now()
-            return round(self._render_custom_template(hass, template_str, market_price_per_kwh, target_dt), 6)
+            return round(self._render_custom_template(template_str, market_price_per_kwh, target_dt), 6)
             
         # Fallback to the original built-in calculation if template is empty
         return self.to_total_price(market_price_per_kwh)
 
-    def get_export_price(self, hass, market_price_per_kwh: float, dt_value=None) -> float:
+    def get_export_price(self, market_price_per_kwh: float, dt_value=None) -> float:
         """Calculate custom export price based on user template or fallback to standard calculation."""
         template_str = self._config_entry.options.get(CONF_TEMPLATE_EXPORT, "")
         
         # If user provided a custom template, use it
         if template_str and template_str.strip() != "":
             target_dt = dt_value if dt_value else dt.now()
-            return round(self._render_custom_template(hass, template_str, market_price_per_kwh, target_dt), 6)
+            return round(self._render_custom_template(template_str, market_price_per_kwh, target_dt), 6)
             
         # Fallback to the original built-in calculation if template is empty
         return self.to_total_price(market_price_per_kwh)

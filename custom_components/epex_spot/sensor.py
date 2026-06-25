@@ -147,7 +147,6 @@ class EpexSpotCustomImportPriceSensorEntity(EpexSpotEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         return self._source.get_import_price(
-            self.hass,
             self._source.marketdata_now.market_price_per_kwh,
             self._source.marketdata_now.start_time
         )
@@ -159,7 +158,6 @@ class EpexSpotCustomImportPriceSensorEntity(EpexSpotEntity, SensorEntity):
                 ATTR_START_TIME: dt_util.as_local(e.start_time).isoformat(),
                 ATTR_END_TIME: dt_util.as_local(e.end_time).isoformat(),
                 self._localized.attr_name_per_kwh: self._source.get_import_price(
-                    self.hass,
                     e.market_price_per_kwh,
                     e.start_time
                 ),
@@ -188,7 +186,6 @@ class EpexSpotCustomExportPriceSensorEntity(EpexSpotEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         return self._source.get_export_price(
-            self.hass,
             self._source.marketdata_now.market_price_per_kwh,
             self._source.marketdata_now.start_time
         )
@@ -200,7 +197,6 @@ class EpexSpotCustomExportPriceSensorEntity(EpexSpotEntity, SensorEntity):
                 ATTR_START_TIME: dt_util.as_local(e.start_time).isoformat(),
                 ATTR_END_TIME: dt_util.as_local(e.end_time).isoformat(),
                 self._localized.attr_name_per_kwh: self._source.get_export_price(
-                    self.hass,
                     e.market_price_per_kwh,
                     e.start_time
                 ),
