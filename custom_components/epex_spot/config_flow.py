@@ -202,6 +202,9 @@ class EpexSpotOptionsFlow(OptionsFlowWithReload):
                 ),
                 self.config_entry.options
             ),
+            description_placeholders={
+                'docs_templates_url': "https://github.com/mampfes/ha_epex_spot/blob/main/docs/templates.md"
+            },
         )
 
 
