@@ -29,9 +29,7 @@
           "export_template": "Custom export price template."
         },
         "data_description": {
-          "tax": "Like Value Added Tax (VAT)",
-          "import_template": "E.g.: {{{ market_price + 0.05 }}}.",
-          "export_template": "E.g.: {{{ market_price * 0.9 }}}."
+          "tax": "Like Value Added Tax (VAT)"
         }
       }
     }
@@ -50,9 +48,7 @@
           "export_template": "Custom export price template."
         },
         "data_description": {
-          "tax": "Like Value Added Tax (VAT)",
-          "import_template": "E.g.: {{{ market_price + 0.05 }}}.",
-          "export_template": "E.g.: {{{ market_price * 0.9 }}}."
+          "tax": "Like Value Added Tax (VAT)"
         }
       }
     }
