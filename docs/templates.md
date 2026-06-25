@@ -74,9 +74,9 @@ Zonneplan applies a fixed surcharge per kWh including procurement costs for impo
 {% set export_base = market_price * 1.21 %}
 {# Check if the calculated hour is between 06:00 and 22:00 #}
 {% if export_base > 0 and now().hour >= 6 and now().hour < 22 %}
-  {{ export_base * 1.50 }}
+  {{ (export_base * 1.50) + energy_tax }}
 {% else %}
-  {{ export_base }}
+  {{ export_base + energy_tax }}
 {% endif %}
 ```
   
