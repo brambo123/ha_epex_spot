@@ -20,16 +20,18 @@
       },
       "options": {
         "title": "Total Price Options",
-        "description": "Configure surcharges and tax to calculate total price per kWh.",
+        "description": "Configure surcharges and tax to calculate total price per kWh, our use custom price templates. Check out our [ready-to-use energy provider templates](https://github.com/mampfes/ha_epex_spot/blob/main/docs/templates.md)!",
         "data": {
           "percentage_surcharge": "Percentage Surcharge (%)",
           "absolute_surcharge": "Absolute Surcharge (€/£ per kWh)",
           "tax": "Tax (%)",
-          "import_template": "Custom import price template. (Overrides other total price calculations)",
+          "import_template": "Custom import price template.",
           "export_template": "Custom export price template."
         },
         "data_description": {
-          "tax": "Like Value Added Tax (VAT)"
+          "tax": "Like Value Added Tax (VAT)",
+          "import_template": "E.g.: {{{ market_price + 0.05 }}}.",
+          "export_template": "E.g.: {{{ market_price * 0.9 }}}."
         }
       }
     }
@@ -38,17 +40,19 @@
     "step": {
       "init": {
         "title": "Total Price Options",
-        "description": "Configure surcharges and tax to calculate total price per kWh.",
+        "description": "Configure surcharges and tax to calculate total price per kWh, our use custom price templates. Check out our [ready-to-use energy provider templates](https://github.com/mampfes/ha_epex_spot/blob/main/docs/templates.md)!",
         "data": {
           "duration": "Slot duration",
           "percentage_surcharge": "Percentage Surcharge (%)",
           "absolute_surcharge": "Absolute Surcharge (€/£ per kWh)",
           "tax": "Tax (%)",
-          "import_template": "Custom import price template. (Overrides other total price calculations)",
+          "import_template": "Custom import price template.",
           "export_template": "Custom export price template."
         },
         "data_description": {
-          "tax": "Like Value Added Tax (VAT)"
+          "tax": "Like Value Added Tax (VAT)",
+          "import_template": "E.g.: {{{ market_price + 0.05 }}}.",
+          "export_template": "E.g.: {{{ market_price * 0.9 }}}."
         }
       }
     }
