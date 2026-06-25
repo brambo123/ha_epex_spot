@@ -68,8 +68,8 @@ In case you would like to install manually:
 
 ## Advanced Price Templates
 
-> [!IMPORTANT]
-> **Overriding Default Calculations:** When you provide a custom template for the import price, the integration's built-in total price calculation (including `Surcharge`, `Tax`, etc. configured in the main options) is **completely bypassed** for that custom sensor. Your template must handle all corporate fees, taxes, and VAT manually.
+> [!NOTE]
+> **Interval Service Behavior:** When using custom price templates, the `find_extreme_price_interval` service will automatically use your evaluated import price template as the base price. However, the integration's built-in `Total Price` calculations (such as fixed surcharges or tax percentages configured in the main options) will **still be applied** on top of it within the service calculation.
 
 The integration allows you to specify custom templates for **Import** and **Export** prices directly in the integration's Options flow. This is useful for dynamic energy contracts where pricing includes corporate margins, taxes, or time-of-day bonuses.
 
