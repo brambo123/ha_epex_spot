@@ -171,39 +171,36 @@ class EpexSpotOptionsFlow(OptionsFlowWithReload):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(
-                        CONF_SURCHARGE_PERC,
-                        default=self.config_entry.options.get(
-                            CONF_SURCHARGE_PERC, DEFAULT_SURCHARGE_PERC
-                        ),
-                    ): vol.Coerce(float),
-                    vol.Optional(
-                        CONF_SURCHARGE_ABS,
-                        default=self.config_entry.options.get(
-                            CONF_SURCHARGE_ABS, DEFAULT_SURCHARGE_ABS
-                        ),
-                    ): vol.Coerce(float),
-                    vol.Optional(
-                        CONF_TAX,
-                        default=self.config_entry.options.get(CONF_TAX, DEFAULT_TAX),
-                    ): vol.Coerce(float),
-                    vol.Required(
-                        CONF_DURATION,
-                        default=self.config_entry.options.get(
-                            CONF_DURATION, DEFAULT_DURATION
-                        ),
-                    ): vol.In(durations),
-                    vol.Optional(
-                        CONF_TEMPLATE_IMPORT,
-                        default=self.config_entry.options.get(CONF_TEMPLATE_IMPORT, ""),
-                    ): TemplateSelector(),
-                    vol.Optional(
-                        CONF_TEMPLATE_EXPORT,
-                        default=self.config_entry.options.get(CONF_TEMPLATE_EXPORT, ""),
-                    ): TemplateSelector(),
-                }
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(
+                    {
+                        vol.Optional(
+                            CONF_SURCHARGE_PERC,
+                            default=self.config_entry.options.get(
+                                CONF_SURCHARGE_PERC, DEFAULT_SURCHARGE_PERC
+                            ),
+                        ): vol.Coerce(float),
+                        vol.Optional(
+                            CONF_SURCHARGE_ABS,
+                            default=self.config_entry.options.get(
+                                CONF_SURCHARGE_ABS, DEFAULT_SURCHARGE_ABS
+                            ),
+                        ): vol.Coerce(float),
+                        vol.Optional(
+                            CONF_TAX,
+                            default=self.config_entry.options.get(CONF_TAX, DEFAULT_TAX),
+                        ): vol.Coerce(float),
+                        vol.Required(
+                            CONF_DURATION,
+                            default=self.config_entry.options.get(
+                                CONF_DURATION, DEFAULT_DURATION
+                            ),
+                        ): vol.In(durations),
+                        vol.Optional(CONF_TEMPLATE_IMPORT): TemplateSelector(),
+                        vol.Optional(CONF_TEMPLATE_EXPORT): TemplateSelector(),
+                    }
+                ),
+                self.config_entry.options
             ),
         )
 
