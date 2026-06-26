@@ -5,28 +5,9 @@ from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 import aiohttp
 
+from ...common import Marketprice, average_marketdata
+
 _LOGGER = logging.getLogger(__name__)
-
-
-class ElexMarketprice:
-    """Bulletproof data container expected by EPEX Spot core."""
-    def __init__(self, start_time: datetime, end_time: datetime, price_kwh: float):
-        self._start_time = start_time
-        self._end_time = end_time
-        self._market_price_per_kwh = price_kwh
-
-    @property
-    def start_time(self):
-        return self._start_time
-
-    @property
-    def end_time(self):
-        return self._end_time
-
-    @property
-    def market_price_per_kwh(self):
-        return self._market_price_per_kwh
-
 
 class Elex:
     """Client for ELEX Day-Ahead spot prices."""
@@ -120,16 +101,16 @@ class Elex:
         """Fetch the day-ahead prices from ELEX API."""
         
         # Ensure we use Central European Time to request the correct "today"
-        tz_cet = ZoneInfo("Europe/Berlin")
+        tz_cet = ZoneInfo("CET")
         today_str = datetime.now(tz_cet).strftime("%Y-%m-%d")
-        
+
         # Map the UI short code back to your backend string
         # api_country_string = self.MARKET_AREAS.get(self._market_area, self._market_area)
 
         params = {
             "country": self._market_area,
             "start_date": today_str,
-            "days": 2
+            "days": 1
         }
         
         headers = {
@@ -149,8 +130,11 @@ class Elex:
                     _LOGGER.error(f"ELEX API Error: {error_msg}")
                     raise Exception(f"ELEX Access Denied: {error_msg}")
 
-                self._marketdata = self._extract_marketdata(data, tz_cet)
-                
+                marketdata = self._extract_marketdata(data, tz_cet)
+                if self._duration > 15:
+                    marketdata = average_marketdata(marketdata, self._duration)
+                self._marketdata = marketdata
+
         except aiohttp.ClientError as err:
             _LOGGER.error(f"Network error communicating with ELEX: {err}")
             raise Exception(f"Network error: {err}")
@@ -164,7 +148,7 @@ class Elex:
             base_date_str = daily_data.get("date")
             if not base_date_str:
                 continue
-                
+
             hourly_prices = daily_data.get("hours", [])
             data_points_count = len(hourly_prices)
             
@@ -172,28 +156,24 @@ class Elex:
                 continue
 
             # Dynamically calculate if this is a 60-min or 15-min market
-            duration_minutes = 1440 // data_points_count
-            
-            for index, price_mwh in enumerate(hourly_prices):
-                minutes_offset = index * duration_minutes
-                
-                base_dt = datetime.strptime(base_date_str, "%Y-%m-%d")
-                start_dt = base_dt + timedelta(minutes=minutes_offset)
-                
-                # Make timestamps timezone-aware for HA charting
-                start_dt_aware = start_dt.replace(tzinfo=tz_cet)
-                end_dt_aware = start_dt_aware + timedelta(minutes=duration_minutes)
-                
+            duration_minutes = 60 if data_points_count <= 25 else 15
+
+            # Get base time
+            start_dt = datetime.strptime(base_date_str, "%Y-%m-%d")
+            start_dt = start_dt.replace(tzinfo=tz_cet)
+
+            for price_mwh in hourly_prices:
                 # Convert ELEX €/MWh to HA expected €/kWh
                 price_kwh = float(price_mwh) / 1000.0
-                
+
                 entries.append(
-                    ElexMarketprice(
-                        start_time=start_dt_aware,
-                        end_time=end_dt_aware,
-                        price_kwh=round(price_kwh, 6),
+                    Marketprice(
+                        duration=duration_minutes,
+                        start_time=start_dt,
+                        price=round(price_kwh, 6)
                     )
                 )
+                
+                start_dt += timedelta(minutes=duration_minutes)
 
-        # Sort chronologically before returning to the core integration
-        return sorted(entries, key=lambda x: x.start_time)
+        return entries
