@@ -25,8 +25,8 @@
           "percentage_surcharge": "Percentage Surcharge (%)",
           "absolute_surcharge": "Absolute Surcharge (€/£ per kWh)",
           "tax": "Tax (%)",
-          "import_template": "Custom import price template.",
-          "export_template": "Custom export price template."
+          "import_template": "Import price template.",
+          "export_template": "Export price template."
         },
         "data_description": {
           "tax": "Like Value Added Tax (VAT)"
@@ -44,8 +44,8 @@
           "percentage_surcharge": "Percentage Surcharge (%)",
           "absolute_surcharge": "Absolute Surcharge (€/£ per kWh)",
           "tax": "Tax (%)",
-          "import_template": "Custom import price template.",
-          "export_template": "Custom export price template."
+          "import_template": "Import price template.",
+          "export_template": "Export price template."
         },
         "data_description": {
           "tax": "Like Value Added Tax (VAT)"

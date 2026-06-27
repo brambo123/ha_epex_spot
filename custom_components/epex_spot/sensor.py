@@ -46,14 +46,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         EpexSpotMedianPriceSensorEntity(coordinator),
     ]
     
-    # Only add the Custom Import/Export Sensor if the template is not empty
+    # Only add the Import/Export Sensor if the template is not empty
     import_template = config_entry.options.get(CONF_TEMPLATE_IMPORT, "")
     if import_template and import_template.strip() != "":
-        entities.append(EpexSpotCustomImportPriceSensorEntity(coordinator))
+        entities.append(EpexSpotImportPriceSensorEntity(coordinator))
         
     export_template = config_entry.options.get(CONF_TEMPLATE_EXPORT, "")
     if export_template and export_template.strip() != "":
-        entities.append(EpexSpotCustomExportPriceSensorEntity(coordinator))
+        entities.append(EpexSpotExportPriceSensorEntity(coordinator))
 
     async_add_entities(entities)
 
@@ -129,12 +129,12 @@ class EpexSpotTotalPriceSensorEntity(EpexSpotEntity, SensorEntity):
 
         return {ATTR_DATA: data}
 
-class EpexSpotCustomImportPriceSensorEntity(EpexSpotEntity, SensorEntity):
-    """Home Assistant sensor containing custom template-based import price."""
+class EpexSpotImportPriceSensorEntity(EpexSpotEntity, SensorEntity):
+    """Home Assistant sensor containing template-based import price."""
 
     entity_description = SensorEntityDescription(
-        key="Custom Import Price",
-        name="Custom Import Price",
+        key="Import Price",
+        name="Import Price",
         suggested_display_precision=6,
         state_class=SensorStateClass.MEASUREMENT,
     )
@@ -168,12 +168,12 @@ class EpexSpotCustomImportPriceSensorEntity(EpexSpotEntity, SensorEntity):
         return {ATTR_DATA: data}
 
 
-class EpexSpotCustomExportPriceSensorEntity(EpexSpotEntity, SensorEntity):
-    """Home Assistant sensor containing custom template-based export price."""
+class EpexSpotExportPriceSensorEntity(EpexSpotEntity, SensorEntity):
+    """Home Assistant sensor containing template-based export price."""
 
     entity_description = SensorEntityDescription(
-        key="Custom Export Price",
-        name="Custom Export Price",
+        key="Export Price",
+        name="Export Price",
         suggested_display_precision=6,
         state_class=SensorStateClass.MEASUREMENT,
     )

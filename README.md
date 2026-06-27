@@ -71,60 +71,29 @@ In case you would like to install manually:
 > [!NOTE]
 > **Interval Service Behavior:** When using custom price templates, the `find_extreme_price_interval` service will automatically use your evaluated import price template as the base price. However, the integration's built-in `Total Price` calculations (such as fixed surcharges or tax percentages configured in the main options) will **still be applied** on top of it within the service calculation.
 
-The integration allows you to specify custom templates for **Import** and **Export** prices directly in the integration's Options flow. This is useful for dynamic energy contracts where pricing includes corporate margins, taxes, or time-of-day bonuses.
+The integration allows you to specify templates for **Import** and **Export** prices directly in the integration's Options flow. This is extremely useful for dynamic energy contracts where pricing includes corporate margins, taxes, time-of-day bonuses, or complex national regulations (such as §14a EnWG in Germany or SNAP in Austria).
 
-The templates have access to the following variables:
-* `market_price`: The raw EPEX spot market price per kWh (float).
-* `now()`: A localized Home Assistant `datetime` object representing the specific hour block being evaluated. This allows accurate future forecasts (e.g., in ApexCharts or the Energy Dashboard) based on time-of-day logic.
+### Real-World Examples & Country Configurations
 
-### Example: NextEnergie (Netherlands)
+We maintain a dedicated guide with fully commented, production-ready templates for various countries and energy providers.
 
-Here is a comprehensive real-world configuration example for the Dutch energy provider **NextEnergie**.
-
-#### 1. Import Price Template
-The import price consists of the raw market price plus 21% VAT, a fixed purchasing fee (`€0.0219` incl. VAT), and a energy tax specification that automatically applies from January 1st, 2027 onwards.
-
-```jinja2
-{% set import_base = (market_price * 1.21) + 0.0219 %}
-
-{# Energy tax applies from January 1st, 2027 onwards #}
-{% if now().strftime('%Y-%m-%d') >= '2027-01-01' %}
-  {# Replace 0.1234 with the actual government energy tax rate including VAT #}
-  {% set energy_tax = 0.1234 %}
-{% else %}
-  {% set energy_tax = 0.0 %}
-{% endif %}
-
-{{ import_base + energy_tax }}
-```
-
-#### 2. Export Price Template
-The export price consists of the raw market price plus 21% VAT and a fixed export fee (`€0.0000` incl. VAT). Additionally, a Solar Bonus of +50% is added during daytime hours (between 06:00 and 22:00), provided that the base export price is positive.
-
-```jinja2
-{% set export_base = (market_price * 1.21) + 0.0000 %}
-
-{# Solar Bonus: +50% return during daytime hours if the price is positive #}
-{% if 6 <= now().hour < 22 and export_base > 0 %}
-  {{ export_base * 1.50 }}
-{% else %}
-  {{ export_base }}
-{% endif %}
-```
+👉 **[View Advanced Price Templates Guide (docs/templates.md)](docs/templates.md)**
 
 
 ## Sensors
 
 This integration provides the following sensors:
 
-1. Total price
-2. Market price
-3. Average market price during the day
-4. Median market price during the day
-5. Lowest market price during the day
-6. Highest market price during the day
-7. Current market price quantile during the day
-8. Rank of the current market price during the day
+1. [Total price](#1-total-price-sensor)
+2. [Market price](#2-market-price-sensor)
+3. [Average market price during the day](#3-average-market-price-sensor)
+4. [Median market price during the day](#4-median-market-price-sensor)
+5. [Lowest market price during the day](#5-lowest-market-price-sensor)
+6. [Highest market price during the day](#6-highest-market-price-sensor)
+7. [Current market price quantile during the day](#7-quantile-sensor)
+8. [Rank of the current market price during the day](#8-rank-sensor)
+9. [Import Price](#9-import-price-sensor)
+10. [Export Price](#10-export-price-sensor)
 
 NOTE: For GB data, the prices will be shown in GBP instead of EUR. The sensor attribute names are adjusted accordingly.
 
@@ -250,6 +219,18 @@ Examples:
 - The sensor reports 0 if the current market price is the lowest during the day. There is no lower market price during the day.
 - The sensor reports 23 if the current market price is the highest during the day (if the market price will be updated hourly). There are 23 hours which are cheaper than the current hour market price.
 - The sensor reports 1 if the current market price is the 2nd cheapest during the day. There is 1 one which is cheaper than the current hour market price.
+
+### 9. Import Price Sensor
+
+The sensor value reports the calculated import price (your electricity consumption price) in €/£/kWh based on your `Import price template` configured in the integration's options.
+
+⚠️ **Note:** This sensor is only available and visible if a `Import price template` has been explicitly configured in the integration settings.
+
+### 10. Export Price Sensor
+
+The sensor value reports the calculated export price (your solar feed-in compensation) in €/£/kWh based on your `Export price template` configured in the integration's options.
+
+⚠️ **Note:** This sensor is only available and visible if a `Export price template` has been explicitly configured in the integration settings.
 
 ## Service Calls
 
