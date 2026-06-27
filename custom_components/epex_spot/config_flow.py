@@ -12,6 +12,7 @@ from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
+    TemplateSelector,
 )
 
 from .const import (
@@ -27,6 +28,8 @@ from .const import (
     CONF_SOURCE_HOFER_GRUENSTROM,
     CONF_SURCHARGE_ABS,
     CONF_SURCHARGE_PERC,
+    CONF_TEMPLATE_IMPORT,
+    CONF_TEMPLATE_EXPORT,
     CONF_TAX,
     CONF_TOKEN,
     CONF_DURATION,
@@ -199,37 +202,45 @@ class EpexSpotOptionsFlow(OptionsFlowWithReload):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(
-                        CONF_SURCHARGE_PERC,
-                        default=self.config_entry.options.get(
-                            CONF_SURCHARGE_PERC, DEFAULT_SURCHARGE_PERC
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(
+                    {
+                        vol.Optional(
+                            CONF_SURCHARGE_PERC,
+                            default=self.config_entry.options.get(
+                                CONF_SURCHARGE_PERC, DEFAULT_SURCHARGE_PERC
+                            ),
+                        ): vol.Coerce(float),
+                        vol.Optional(
+                            CONF_SURCHARGE_ABS,
+                            default=self.config_entry.options.get(
+                                CONF_SURCHARGE_ABS, DEFAULT_SURCHARGE_ABS
+                            ),
+                        ): vol.Coerce(float),
+                        vol.Optional(
+                            CONF_TAX,
+                            default=self.config_entry.options.get(CONF_TAX, DEFAULT_TAX),
+                        ): vol.Coerce(float),
+                        vol.Required(
+                            CONF_DURATION,
+                            default=str(self.config_entry.options.get(
+                                CONF_DURATION, DEFAULT_DURATION
+                            )),
+                        ): SelectSelector(
+                            SelectSelectorConfig(
+                                options=duration_options,
+                                mode=SelectSelectorMode.DROPDOWN
+                            )
                         ),
-                    ): vol.Coerce(float),
-                    vol.Optional(
-                        CONF_SURCHARGE_ABS,
-                        default=self.config_entry.options.get(
-                            CONF_SURCHARGE_ABS, DEFAULT_SURCHARGE_ABS
-                        ),
-                    ): vol.Coerce(float),
-                    vol.Optional(
-                        CONF_TAX,
-                        default=self.config_entry.options.get(CONF_TAX, DEFAULT_TAX),
-                    ): vol.Coerce(float),
-                    vol.Required(
-                        CONF_DURATION,
-                        default=str(self.config_entry.options.get(
-                            CONF_DURATION, DEFAULT_DURATION
-                        )),
-                    ): SelectSelector(
-                        SelectSelectorConfig(
-                            options=duration_options,
-                            mode=SelectSelectorMode.DROPDOWN
-                        )
-                    ),
-                }
+                        vol.Optional(CONF_TEMPLATE_IMPORT): TemplateSelector(),
+                        vol.Optional(CONF_TEMPLATE_EXPORT): TemplateSelector(),
+                    }
+                ),
+                self.config_entry.options
             ),
+            description_placeholders={
+                'docs_templates_url': "https://github.com/mampfes/ha_epex_spot/blob/main/docs/templates.md"
+            },
         )
 
 
