@@ -8,6 +8,11 @@ from typing import List, Tuple
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlowWithReload
 from homeassistant.core import callback
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 
 from .const import (
     CONF_MARKET_AREA,
@@ -90,11 +95,23 @@ class EpexSpotConfigFlow(ConfigFlow, domain=DOMAIN):  # type: ignore
 
         areas, durations, requires_token = getParametersForSource(self._source_name)
 
+        duration_options = [
+            {"value": str(d), "label": f"{d} min"} for d in durations
+        ]
+
         data_schema = (
             vol.Schema(
                 {
                     vol.Required(CONF_MARKET_AREA): vol.In(areas),
-                    vol.Required(CONF_DURATION): vol.All(vol.Coerce(int), vol.In(durations)),
+                    vol.Required(
+                        CONF_DURATION,
+                        default=str(DEFAULT_DURATION),
+                    ): SelectSelector(
+                        SelectSelectorConfig(
+                            options=duration_options,
+                            mode=SelectSelectorMode.DROPDOWN
+                        )
+                    ),
                     vol.Required(CONF_TOKEN): vol.Coerce(str),
                 }
             )
@@ -102,7 +119,15 @@ class EpexSpotConfigFlow(ConfigFlow, domain=DOMAIN):  # type: ignore
             else vol.Schema(
                 {
                     vol.Required(CONF_MARKET_AREA): vol.In(areas),
-                    vol.Required(CONF_DURATION): vol.All(vol.Coerce(int), vol.In(durations)),
+                    vol.Required(
+                        CONF_DURATION,
+                        default=str(DEFAULT_DURATION),
+                    ): SelectSelector(
+                        SelectSelectorConfig(
+                            options=duration_options,
+                            mode=SelectSelectorMode.DROPDOWN
+                        )
+                    ),
                 },
             )
         )
@@ -133,7 +158,7 @@ class EpexSpotConfigFlow(ConfigFlow, domain=DOMAIN):  # type: ignore
                 data[CONF_TOKEN] = user_input[CONF_TOKEN]
             options = {CONF_DURATION: DEFAULT_DURATION}
             if CONF_DURATION in user_input:
-                options[CONF_DURATION] = user_input[CONF_DURATION]
+                options[CONF_DURATION] = int(user_input[CONF_DURATION])
 
             return self.async_create_entry(
                 title=title,
@@ -160,11 +185,17 @@ class EpexSpotOptionsFlow(OptionsFlowWithReload):
     async def async_step_init(self, user_input=None):
         """Manage the options."""
         if user_input is not None:
+            if CONF_DURATION in user_input:
+                user_input[CONF_DURATION] = int(user_input[CONF_DURATION])
             return self.async_create_entry(title="", data=user_input)
 
         _, durations, _ = getParametersForSource(
             self.config_entry.data.get(CONF_SOURCE)
         )
+
+        duration_options = [
+            {"value": str(d), "label": f"{d} min"} for d in durations
+        ]
 
         return self.async_show_form(
             step_id="init",
@@ -188,10 +219,15 @@ class EpexSpotOptionsFlow(OptionsFlowWithReload):
                     ): vol.Coerce(float),
                     vol.Required(
                         CONF_DURATION,
-                        default=self.config_entry.options.get(
+                        default=str(self.config_entry.options.get(
                             CONF_DURATION, DEFAULT_DURATION
-                        ),
-                    ): vol.In(durations),
+                        )),
+                    ): SelectSelector(
+                        SelectSelectorConfig(
+                            options=duration_options,
+                            mode=SelectSelectorMode.DROPDOWN
+                        )
+                    ),
                 }
             ),
         )
