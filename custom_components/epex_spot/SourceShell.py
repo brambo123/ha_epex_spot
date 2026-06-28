@@ -6,8 +6,10 @@ from typing import Any
 
 import aiohttp
 
+from homeassistant.helpers.storage import Store
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.util import dt
+from .common import Marketprice
 
 from custom_components.epex_spot.const import (
     CONF_DURATION,
@@ -51,12 +53,16 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class SourceShell:
-    def __init__(self, config_entry: ConfigEntry, session: aiohttp.ClientSession):
+    def __init__(self, hass, config_entry: ConfigEntry, session: aiohttp.ClientSession):
+        self._hass = hass
         self._config_entry = config_entry
         self._marketdata_now = None
         self._sorted_marketdata_today = []
         self._cheapest_sorted_marketdata_today = None
         self._most_expensive_sorted_marketdata_today = None
+        self._has_data_today = False
+        self._has_data_tomorrow = False
+        self._store = Store(self._hass, 1, f"epex_spot.{self._config_entry.entry_id}")
 
         # create source object
         if config_entry.data[CONF_SOURCE] == CONF_SOURCE_AWATTAR:
@@ -146,6 +152,14 @@ class SourceShell:
         """Sorted by price."""
         return self._sorted_marketdata_today
 
+    @property
+    def has_data_today(self) -> bool:
+        return self._has_data_today
+
+    @property
+    def has_data_tomorrow(self) -> bool:
+        return self._has_data_tomorrow
+
     async def fetch(self, *args: Any):
         await self._source.fetch()
 
@@ -156,6 +170,7 @@ class SourceShell:
             return
 
         now = dt.now()
+        minimal_daily_points = 23*60 / self._source.duration
 
         # find current entry in marketdata list
         try:
@@ -170,17 +185,24 @@ class SourceShell:
             self._sorted_marketdata_today = []
 
         # get list of entries for today
-        start_of_day = now.replace(hour=0, minute=0, second=0, microsecond=0)
-        end_of_day = start_of_day + timedelta(days=1)
-
+        current_date = now.date()
         sorted_marketdata_today = filter(
-            lambda e: e.start_time >= start_of_day and e.end_time <= end_of_day,
+            lambda e: e.start_time.date() == current_date,
             self.marketdata,
         )
         sorted_sorted_marketdata_today = sorted(
             sorted_marketdata_today, key=lambda e: e.market_price_per_kwh
         )
         self._sorted_marketdata_today = sorted_sorted_marketdata_today
+        self._has_data_today = len(sorted_sorted_marketdata_today) >= minimal_daily_points
+
+        # get list of entries for tomorrow
+        tomorrow_date = current_date + timedelta(days=1)
+        marketdata_tomorrow = filter(
+            lambda e: e.start_time.date() == tomorrow_date,
+            self.marketdata,
+        )
+        self._has_data_tomorrow = len(list(marketdata_tomorrow)) >= minimal_daily_points
 
     def to_total_price(self, market_price_per_kwh):
         total_price = market_price_per_kwh
@@ -229,3 +251,23 @@ class SourceShell:
             "market_price_per_kwh": round(result["market_price_per_hour"], 6),
             "total_price_per_kwh": self.to_total_price(result["market_price_per_hour"]),
         }
+
+    async def async_load_cache(self) -> None:
+        """Load marketdata from the isolated .storage file into the active source."""
+        try:
+            cached_data = await self._store.async_load()
+            if cached_data and "marketdata" in cached_data:
+                self._source._marketdata = [
+                    Marketprice.from_dict(e) for e in cached_data["marketdata"]
+                ]
+                self.update_time()
+        except Exception as err:  # pylint: disable=broad-except
+            _LOGGER.warning(f"Error loading EPEX Spot storage cache: {err}")
+
+    async def async_save_cache(self) -> None:
+        """Save current marketdata from the active source to the isolated .storage file."""
+        try:
+            serializable = [e.to_dict() for e in self._source.marketdata]
+            await self._store.async_save({"marketdata": serializable})
+        except Exception as err:  # pylint: disable=broad-except
+            _LOGGER.warning(f"Error saving EPEX Spot storage cache: {err}")
