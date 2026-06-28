@@ -146,6 +146,8 @@ class EpexSpotImportPriceSensorEntity(EpexSpotEntity, SensorEntity):
 
     @property
     def native_value(self) -> StateType:
+        if not self._source.marketdata_now:
+            return None
         return self._source.get_import_price(
             self._source.marketdata_now.market_price_per_kwh,
             self._source.marketdata_now.start_time
@@ -153,6 +155,8 @@ class EpexSpotImportPriceSensorEntity(EpexSpotEntity, SensorEntity):
 
     @property
     def extra_state_attributes(self):
+        if not self._source.marketdata:
+            return {ATTR_DATA: []}
         data = [
             {
                 ATTR_START_TIME: dt_util.as_local(e.start_time).isoformat(),
@@ -185,6 +189,8 @@ class EpexSpotExportPriceSensorEntity(EpexSpotEntity, SensorEntity):
 
     @property
     def native_value(self) -> StateType:
+        if not self._source.marketdata_now:
+            return None
         return self._source.get_export_price(
             self._source.marketdata_now.market_price_per_kwh,
             self._source.marketdata_now.start_time
@@ -192,6 +198,8 @@ class EpexSpotExportPriceSensorEntity(EpexSpotEntity, SensorEntity):
 
     @property
     def extra_state_attributes(self):
+        if not self._source.marketdata:
+            return {ATTR_DATA: []}
         data = [
             {
                 ATTR_START_TIME: dt_util.as_local(e.start_time).isoformat(),
