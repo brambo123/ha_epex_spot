@@ -43,6 +43,9 @@ You can choose between multiple sources:
    [Hofer Grünstrom](https://www.hofer-grünstrom.at/tarife-zum-geld-sparen#spot) has an open API for accessing market data for Austria. So far no user identification is required. (This API is not officially documented, but was discovered by reverse engineering the Hofer Grünstrom website.)
 
    ⚠️ **Note:** The SSL certificate used by the Hofer Grünstrom API is not trusted publicly. Therefore, when using this source, the integration will ignore SSL certificate verification. This is a potential security risk, so please be aware of this when using this source.
+   
+9. Jeroen.nl
+   [Jeroen.nl](https://jeroen.nl/account/feeds) Is an independent platform about energy and offers a free API with Dutch EPEX Spot rates to registered users. The API is limited to a maximum of 10 requests per day, but this integration already handles this appropriately.
 
 9. EnergyZero
    [EnergyZero](https://external.docs.api.staging.energyzero.nl/docs/api/rest/public/energy-market-service-get-prices) provides a public API that offers EPEX Spot market prices for the Netherlands. EnergyZero acts as the back-end platform and price provider for various dynamic energy labels, including **ANWB Energie**, **Greenchoice**, **Energie van Ons**, **Mijndomein Energie**, and **Vrijopnaam**. No registration or API token is required.

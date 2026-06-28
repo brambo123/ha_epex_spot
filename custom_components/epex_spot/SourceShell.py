@@ -29,6 +29,7 @@ from custom_components.epex_spot.const import (
     CONF_SOURCE_TIBBER,
     CONF_SOURCE_HOFER_GRUENSTROM,
     CONF_SOURCE_ENERGYZERO,
+    CONF_SOURCE_JEROEN,
     CONF_SURCHARGE_ABS,
     CONF_SURCHARGE_PERC,
     CONF_TEMPLATE_IMPORT,
@@ -51,6 +52,7 @@ from custom_components.epex_spot.EPEXSpot import (
     EnergyCharts,
     HoferGruenstrom,
     EnergyZero,
+    Jeroen,
 )
 from .extreme_price_interval import find_extreme_price_interval, get_start_times
 
@@ -125,6 +127,11 @@ class SourceShell:
             self._source = EnergyZero.EnergyZero(
                 market_area=config_entry.data[CONF_MARKET_AREA],
                 duration=config_entry.options.get(CONF_DURATION, DEFAULT_DURATION),
+        elif config_entry.data[CONF_SOURCE] == CONF_SOURCE_JEROEN:
+            self._source = Jeroen.Jeroen(
+                market_area=config_entry.data[CONF_MARKET_AREA],
+                duration=config_entry.options.get(CONF_DURATION, DEFAULT_DURATION),
+                token=self._config_entry.data[CONF_TOKEN],
                 session=session,
             )
         else:

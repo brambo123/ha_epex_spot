@@ -27,6 +27,7 @@ from .const import (
     CONF_SOURCE_ENERGYCHARTS,
     CONF_SOURCE_HOFER_GRUENSTROM,
     CONF_SOURCE_ENERGYZERO,
+    CONF_SOURCE_JEROEN,
     CONF_SURCHARGE_ABS,
     CONF_SURCHARGE_PERC,
     CONF_TEMPLATE_IMPORT,
@@ -51,6 +52,7 @@ from .EPEXSpot import (
     EnergyCharts,
     HoferGruenstrom,
     EnergyZero,
+    Jeroen,
 )
 
 CONF_SOURCE_LIST = (
@@ -63,6 +65,7 @@ CONF_SOURCE_LIST = (
     CONF_SOURCE_ENERGYCHARTS,
     CONF_SOURCE_HOFER_GRUENSTROM,
     CONF_SOURCE_ENERGYZERO,
+    CONF_SOURCE_JEROEN,
 )
 
 
@@ -308,4 +311,11 @@ def getParametersForSource(
             EnergyZero.EnergyZero.SUPPORTED_DURATIONS,
             False,
         )
+    if source_name == CONF_SOURCE_JEROEN:
+        return (
+            Jeroen.Jeroen.MARKET_AREAS,
+            Jeroen.Jeroen.SUPPORTED_DURATIONS,
+            True,
+        )
+
     return ([], [], False)
