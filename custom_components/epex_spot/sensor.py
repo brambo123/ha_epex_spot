@@ -63,10 +63,14 @@ class EpexSpotMarketPriceSensorEntity(EpexSpotEntity, SensorEntity):
 
     @property
     def native_value(self) -> StateType:
+        if not self._source.marketdata_now:
+            return None
         return self._source.marketdata_now.market_price_per_kwh
 
     @property
     def extra_state_attributes(self):
+        if not self._source.marketdata:
+            return {ATTR_DATA: []}
         data = [
             {
                 ATTR_START_TIME: dt_util.as_local(e.start_time).isoformat(),
@@ -99,12 +103,16 @@ class EpexSpotTotalPriceSensorEntity(EpexSpotEntity, SensorEntity):
 
     @property
     def native_value(self) -> StateType:
+        if not self._source.marketdata_now:
+            return None
         return self._source.to_total_price(
             self._source.marketdata_now.market_price_per_kwh
         )
 
     @property
     def extra_state_attributes(self):
+        if not self._source.marketdata:
+            return {ATTR_DATA: []}
         data = [
             {
                 ATTR_START_TIME: dt_util.as_local(e.start_time).isoformat(),
@@ -135,10 +143,14 @@ class EpexSpotBuyVolumeSensorEntity(EpexSpotEntity, SensorEntity):
 
     @property
     def native_value(self) -> StateType:
+        if not self._source.marketdata_now:
+            return None
         return self._source.marketdata_now.buy_volume_mwh
 
     @property
     def extra_state_attributes(self):
+        if not self._source.marketdata:
+            return {ATTR_DATA: []}
         data = [
             {
                 ATTR_START_TIME: dt_util.as_local(e.start_time).isoformat(),
@@ -167,10 +179,14 @@ class EpexSpotSellVolumeSensorEntity(EpexSpotEntity, SensorEntity):
 
     @property
     def native_value(self) -> StateType:
+        if not self._source.marketdata_now:
+            return None
         return self._source.marketdata_now.sell_volume_mwh
 
     @property
     def extra_state_attributes(self):
+        if not self._source.marketdata:
+            return {ATTR_DATA: []}
         data = [
             {
                 ATTR_START_TIME: dt_util.as_local(e.start_time).isoformat(),
@@ -199,10 +215,14 @@ class EpexSpotVolumeSensorEntity(EpexSpotEntity, SensorEntity):
 
     @property
     def native_value(self) -> StateType:
+        if not self._source.marketdata_now:
+            return None
         return self._source.marketdata_now.volume_mwh
 
     @property
     def extra_state_attributes(self):
+        if not self._source.marketdata:
+            return {ATTR_DATA: []}
         data = [
             {
                 ATTR_START_TIME: dt_util.as_local(e.start_time).isoformat(),
@@ -231,12 +251,16 @@ class EpexSpotRankSensorEntity(EpexSpotEntity, SensorEntity):
 
     @property
     def native_value(self) -> StateType:
+        if not self._source.marketdata_now or not self._source.sorted_marketdata_today:
+            return None
         return [
             e.market_price_per_kwh for e in self._source.sorted_marketdata_today
         ].index(self._source.marketdata_now.market_price_per_kwh)
 
     @property
     def extra_state_attributes(self):
+        if not self._source.marketdata or not self._source.sorted_marketdata_today:
+            return {ATTR_DATA: []}
         sorted_prices = [
             e.market_price_per_kwh for e in self._source.sorted_marketdata_today
         ]
@@ -268,6 +292,8 @@ class EpexSpotQuantileSensorEntity(EpexSpotEntity, SensorEntity):
 
     @property
     def native_value(self) -> StateType:
+        if not self._source.marketdata_now or not self._source.sorted_marketdata_today:
+            return None
         current_price = self._source.marketdata_now.market_price_per_kwh
         min_price = self._source.sorted_marketdata_today[0].market_price_per_kwh
         max_price = self._source.sorted_marketdata_today[-1].market_price_per_kwh
@@ -275,6 +301,8 @@ class EpexSpotQuantileSensorEntity(EpexSpotEntity, SensorEntity):
 
     @property
     def extra_state_attributes(self):
+        if not self._source.marketdata or not self._source.sorted_marketdata_today:
+            return {ATTR_DATA: []}
         min_price = self._source.sorted_marketdata_today[0].market_price_per_kwh
         max_price = self._source.sorted_marketdata_today[-1].market_price_per_kwh
         data = [
@@ -307,11 +335,15 @@ class EpexSpotLowestPriceSensorEntity(EpexSpotEntity, SensorEntity):
 
     @property
     def native_value(self) -> StateType:
+        if not self._source.marketdata_now or not self._source.sorted_marketdata_today:
+            return None
         min = self._source.sorted_marketdata_today[0]
         return min.market_price_per_kwh
 
     @property
     def extra_state_attributes(self):
+        if not self._source.marketdata or not self._source.sorted_marketdata_today:
+            return {ATTR_DATA: []}
         min = self._source.sorted_marketdata_today[0]
         return {
             ATTR_START_TIME: dt_util.as_local(min.start_time).isoformat(),
@@ -337,11 +369,15 @@ class EpexSpotHighestPriceSensorEntity(EpexSpotEntity, SensorEntity):
 
     @property
     def native_value(self) -> StateType:
+        if not self._source.marketdata_now or not self._source.sorted_marketdata_today:
+            return None
         max = self._source.sorted_marketdata_today[-1]
         return max.market_price_per_kwh
 
     @property
     def extra_state_attributes(self):
+        if not self._source.marketdata or not self._source.sorted_marketdata_today:
+            return {ATTR_DATA: []}
         max = self._source.sorted_marketdata_today[-1]
         return {
             ATTR_START_TIME: dt_util.as_local(max.start_time).isoformat(),
@@ -367,6 +403,8 @@ class EpexSpotAveragePriceSensorEntity(EpexSpotEntity, SensorEntity):
 
     @property
     def native_value(self) -> StateType:
+        if not self._source.marketdata_now or not self._source.sorted_marketdata_today:
+            return None
         s = sum(e.market_price_per_kwh for e in self._source.sorted_marketdata_today)
         return s / len(self._source.sorted_marketdata_today)
 
@@ -394,6 +432,8 @@ class EpexSpotMedianPriceSensorEntity(EpexSpotEntity, SensorEntity):
 
     @property
     def native_value(self) -> StateType:
+        if not self._source.marketdata_now or not self._source.sorted_marketdata_today:
+            return None
         return median(
             [e.market_price_per_kwh for e in self._source.sorted_marketdata_today]
         )
