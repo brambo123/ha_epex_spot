@@ -29,6 +29,7 @@ from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
+from homeassistant.helpers.storage import Store
 
 from .const import (
     ATTR_DATA,
@@ -70,16 +71,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     source = SourceShell(hass, entry, async_get_clientsession(hass))
 
-    try:
-        await source.fetch()
-        source.update_time()
-    except Exception as err:  # pylint: disable=broad-except
-        ex = ConfigEntryNotReady()
-        ex.__cause__ = err
-        raise ex
+    await source.async_load_cache()
 
     coordinator = EpexSpotDataUpdateCoordinator(hass, source=source)
-    await coordinator.async_config_entry_first_refresh()
+
+    if source.has_data_today:
+        coordinator.async_set_updated_data(None)
+    else:
+        try:
+            await coordinator.source.fetch()
+            await coordinator.source.async_save_cache()
+            coordinator.source.update_time()
+            coordinator.async_set_updated_data(None)
+        except Exception as err:  # pylint: disable=broad-except
+            ex = ConfigEntryNotReady()
+            ex.__cause__ = err
+            raise ex
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
@@ -187,6 +194,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok
 
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Clean up storage cache when the integration is removed by the user."""
+    try:
+        store = Store(hass, 1, f"epex_spot.{entry.entry_id}")
+        await store.async_remove()
+    except Exception as err:  # pylint: disable=broad-except
+        _LOGGER.error(f"Error removing EPEX Spot storage cache: {err}")
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Migrate old entry data to the new entry schema."""
@@ -223,7 +237,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
 
 
 class EpexSpotDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
-    """Class to manage fetching AccuWeather data API."""
+    """Class to manage fetching data API."""
 
     source: SourceShell
 
@@ -246,15 +260,25 @@ class EpexSpotDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         await self.async_refresh()
 
     async def fetch_source(self, *args: Any):
+        # skip fetch function if we do not expect new data
+        if self.source.has_data_today and (dt.now().hour < 12 or self.source.has_data_tomorrow):
+            return
+        
         # spread fetch over 9 minutes to reduce peak load on servers
         await asyncio.sleep(random.uniform(0, 9 * 60))
         try:
             await self.source.fetch()
             self._error_count = 0
-        except Exception:  # pylint: disable=broad-except
+            await self.source.async_save_cache()
+        except Exception as err:  # pylint: disable=broad-except
             self._error_count += 1
             if self._error_count >= 3:
-                raise
+                _LOGGER.warning(
+                    f"Failed to fetch new data for {self.source.name} after {self._error_count} attempts. "
+                    f"Existing market data remains active. Error: {err}"
+                )
+            else:
+                _LOGGER.info(f"Fetch attempt {self._error_count} failed for {self.source.name}: {err}")
 
 
 class EpexSpotEntity(CoordinatorEntity, Entity):

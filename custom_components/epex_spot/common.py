@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from typing import List
 
+from homeassistant.util import dt
 from .const import UOM_EUR_PER_KWH
 
 
@@ -36,6 +37,29 @@ class Marketprice:
     @property
     def market_price_per_kwh(self):
         return self._market_price_per_kwh
+
+    def to_dict(self) -> dict:
+        """Convert Marketprice to a serializable dictionary."""
+        return {
+            "start_time": self._start_time.isoformat(),
+            "end_time": self._end_time.isoformat(),
+            "price": self._market_price_per_kwh,
+            "unit": self._unit,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict):
+        """Create a Marketprice instance from a dictionary."""
+        start_time = dt.parse_datetime(data["start_time"])
+        end_time = dt.parse_datetime(data["end_time"])
+        duration = int((end_time - start_time).total_seconds() / 60)
+        
+        return cls(
+            start_time=start_time,
+            duration=duration,
+            price=data["price"],
+            unit=data["unit"]
+        )
 
 
 def compress_marketdata(data: List[Marketprice], duration: int) -> List[Marketprice]:
