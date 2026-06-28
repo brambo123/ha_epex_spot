@@ -48,7 +48,6 @@ class EnergyZero:
 
     async def fetch(self):
         """Fetch market price data using EnergyZero's rolling data window."""
-        self._marketdata = []
         now = datetime.now()
 
         date_str = now.strftime("%d-%m-%Y")
@@ -61,24 +60,32 @@ class EnergyZero:
         }
 
         try:
+            marketdata: list[Marketprice] = []
             async with self._session.get(self.URL, params=params) as resp:
                 resp.raise_for_status()
                 data = await resp.json()
-                
+
                 if "base" in data:
                     for entry in data["base"]:
                         start_time = datetime.fromisoformat(entry["start"])
                         price = float(entry["price"]["value"])
-                        
-                        self._marketdata.append(
+
+                        marketdata.append(
                             Marketprice(
                                 duration=self._duration,
                                 start_time=start_time,
                                 price=round(price, 6)
                             )
                         )
+
+            minimal_points = int(23 * 60 / self._duration)
+            if len(marketdata) < minimal_points:
+                raise ValueError(
+                    f"Received incomplete data from EnergyZero. Expected at least {minimal_points} points, got {len(marketdata)}."
+                )
+
+            marketdata.sort(key=lambda x: x.start_time)
+            self._marketdata = marketdata
+
         except Exception as e:
             _LOGGER.error(f"Error fetching EnergyZero data for date {date_str}: {e}")
-
-        # Ensure all received data points are sorted chronologically
-        self._marketdata.sort(key=lambda x: x.start_time)
