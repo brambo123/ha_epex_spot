@@ -35,6 +35,7 @@ from .const import (
     CONF_TAX,
     CONF_TOKEN,
     CONF_DURATION,
+    CONF_BACKUP_ENTRY,
     CONFIG_VERSION,
     DEFAULT_DURATION,
     DEFAULT_SURCHARGE_ABS,
@@ -198,6 +199,17 @@ class EpexSpotOptionsFlow(OptionsFlowWithReload):
                 user_input[CONF_DURATION] = int(user_input[CONF_DURATION])
             return self.async_create_entry(title="", data=user_input)
 
+        # Get backup entries
+        current_entries = self.hass.config_entries.async_entries(DOMAIN)
+        backup_options = [{"value": "none", "label": "none"}]
+        for entry in current_entries:
+            if entry.entry_id != self.config_entry.entry_id:
+                backup_options.append({
+                    "value": entry.entry_id,
+                    "label": entry.title
+                })
+
+        # Get source parameters
         _, durations, _ = getParametersForSource(
             self.config_entry.data.get(CONF_SOURCE)
         )
@@ -211,6 +223,13 @@ class EpexSpotOptionsFlow(OptionsFlowWithReload):
             data_schema=self.add_suggested_values_to_schema(
                 vol.Schema(
                     {
+                        vol.Optional(CONF_BACKUP_ENTRY, default="none"): SelectSelector(
+                            SelectSelectorConfig(
+                                options=backup_options,
+                                mode=SelectSelectorMode.DROPDOWN,
+                                translation_key="backup_entry_id"
+                            )
+                        ),
                         vol.Optional(
                             CONF_SURCHARGE_PERC,
                             default=self.config_entry.options.get(

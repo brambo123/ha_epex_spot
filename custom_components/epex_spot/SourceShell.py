@@ -36,6 +36,7 @@ from custom_components.epex_spot.const import (
     CONF_TEMPLATE_EXPORT,
     CONF_TAX,
     CONF_TOKEN,
+    CONF_BACKUP_ENTRY,
     DEFAULT_DURATION,
     DEFAULT_SURCHARGE_ABS,
     DEFAULT_SURCHARGE_PERC,
@@ -180,6 +181,10 @@ class SourceShell:
     def has_data_tomorrow(self) -> bool:
         return self._has_data_tomorrow
 
+    @property
+    def minimal_daily_points(self):
+        return int(23 * 60 / self._source.duration)
+
     async def fetch(self, *args: Any):
         await self._source.fetch()
 
@@ -190,7 +195,6 @@ class SourceShell:
             return
 
         now = dt.now()
-        minimal_daily_points = 23*60 / self._source.duration
 
         # find current entry in marketdata list
         try:
@@ -207,22 +211,22 @@ class SourceShell:
         # get list of entries for today
         current_date = now.date()
         sorted_marketdata_today = filter(
-            lambda e: e.start_time.date() == current_date,
+            lambda e: dt.as_local(e.start_time).date() == current_date,
             self.marketdata,
         )
         sorted_sorted_marketdata_today = sorted(
             sorted_marketdata_today, key=lambda e: e.market_price_per_kwh
         )
         self._sorted_marketdata_today = sorted_sorted_marketdata_today
-        self._has_data_today = len(sorted_sorted_marketdata_today) >= minimal_daily_points
+        self._has_data_today = len(sorted_sorted_marketdata_today) >= self.minimal_daily_points
 
         # get list of entries for tomorrow
         tomorrow_date = current_date + timedelta(days=1)
         marketdata_tomorrow = filter(
-            lambda e: e.start_time.date() == tomorrow_date,
+            lambda e: dt.as_local(e.start_time).date() == tomorrow_date,
             self.marketdata,
         )
-        self._has_data_tomorrow = len(list(marketdata_tomorrow)) >= minimal_daily_points
+        self._has_data_tomorrow = len(list(marketdata_tomorrow)) >= self.minimal_daily_points
 
     def to_total_price(self, market_price_per_kwh):
         total_price = market_price_per_kwh
@@ -322,11 +326,21 @@ class SourceShell:
         """Load marketdata from the isolated .storage file into the active source."""
         try:
             cached_data = await self._store.async_load()
-            if cached_data and "marketdata" in cached_data:
-                self._source._marketdata = [
-                    Marketprice.from_dict(e) for e in cached_data["marketdata"]
-                ]
-                self.update_time()
+            if cached_data:
+
+                cached_duration = cached_data.get("duration")
+                if cached_duration != self.duration:
+                    _LOGGER.warning(
+                        f"Cache duration mismatch for entry {self._config_entry.entry_id}. "
+                        f"Configured: {self.duration}m, Cached: {cached_duration}m. "
+                    )
+                    return
+
+                if "marketdata" in cached_data:
+                    self._source._marketdata = [
+                        Marketprice.from_dict(e) for e in cached_data["marketdata"]
+                    ]
+                    self.update_time()
         except Exception as err:  # pylint: disable=broad-except
             _LOGGER.warning(f"Error loading EPEX Spot storage cache: {err}")
 
@@ -334,6 +348,46 @@ class SourceShell:
         """Save current marketdata from the active source to the isolated .storage file."""
         try:
             serializable = [e.to_dict() for e in self._source.marketdata]
-            await self._store.async_save({"marketdata": serializable})
+            await self._store.async_save({
+                    "duration": self.duration,
+                    "marketdata": serializable
+                })
         except Exception as err:  # pylint: disable=broad-except
             _LOGGER.warning(f"Error saving EPEX Spot storage cache: {err}")
+
+    async def async_load_backup_cache(self) -> None:
+        """Load marketdata from the backup cache file."""
+        backup_id = self._config_entry.data.get(CONF_BACKUP_ENTRY, "none")
+        if backup_id != "none":
+            _LOGGER.info(f"Attempting to read backup cache from entry {backup_id}")
+            try:
+                backup_store = Store(self._hass, 1, f"epex_spot.{backup_id}")
+                cached_data = await backup_store.async_load()
+                if cached_data:
+
+                    cached_duration = cached_data.get("duration")
+                    if cached_duration != self.duration:
+                        _LOGGER.warning(
+                            f"Cache duration mismatch for entry {self._config_entry.entry_id}. "
+                            f"Configured: {self.duration}m, Cached: {cached_duration}m. "
+                        )
+                        return
+
+                    if "marketdata" in cached_data:
+                        backup_marketdata = [
+                            Marketprice.from_dict(e) for e in cached_data["marketdata"]
+                        ]
+
+                        today_points = sum(
+                            1 for e in backup_marketdata 
+                            if dt.as_local(e.start_time).date() == dt.now().date()
+                        )
+                        if today_points >= self.minimal_daily_points:
+                            self._source._marketdata = backup_marketdata
+                            _LOGGER.info(f"Successfully loaded backup data from other entry cache!")
+                            return
+
+            except Exception as err:  # pylint: disable=broad-except
+                _LOGGER.error(f"Failed to read backup entry cache: {err}")
+
+        _LOGGER.error(f"No live data and no valid backup data available for {self.name}")
