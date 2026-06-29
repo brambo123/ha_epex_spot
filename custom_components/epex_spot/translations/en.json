@@ -19,15 +19,22 @@
         "description": "{ssl_warning}"
       },
       "options": {
-        "title": "Total Price Options",
+        "title": "Epex Spot Options",
         "description": "Configure surcharges and tax to calculate total price per kWh.",
         "data": {
+          "backup_entry_id": "Fallback source",
           "percentage_surcharge": "Percentage Surcharge (%)",
           "absolute_surcharge": "Absolute Surcharge (€/£ per kWh)",
           "tax": "Tax (%)"
         },
         "data_description": {
+          "backup_entry_id": "Use this source if no valid marketdata is available",
           "tax": "Like Value Added Tax (VAT)"
+        },
+        "data_options": {
+          "backup_entry_id": {
+            "none": "No fallback source"
+          }
         }
       }
     }
@@ -35,16 +42,23 @@
   "options": {
     "step": {
       "init": {
-        "title": "Total Price Options",
+        "title": "Epex Spot Options",
         "description": "Configure surcharges and tax to calculate total price per kWh.",
         "data": {
+          "backup_entry_id": "Fallback source",
           "duration": "Slot duration",
           "percentage_surcharge": "Percentage Surcharge (%)",
           "absolute_surcharge": "Absolute Surcharge (€/£ per kWh)",
           "tax": "Tax (%)"
         },
         "data_description": {
+          "backup_entry_id": "Use this source if no valid marketdata is available",
           "tax": "Like Value Added Tax (VAT)"
+        },
+        "data_options": {
+          "backup_entry_id": {
+            "none": "No fallback source"
+          }
         }
       }
     }

@@ -18,6 +18,8 @@ CONF_SOURCE = "source"
 CONF_MARKET_AREA = "market_area"
 CONF_TOKEN = "token"
 
+CONF_BACKUP_ENTRY = "backup_entry_id"
+
 # possible values for CONF_SOURCE
 CONF_SOURCE_AWATTAR = "Awattar"
 CONF_SOURCE_SMARD_DE = "SMARD.de"

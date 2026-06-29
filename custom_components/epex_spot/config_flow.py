@@ -8,6 +8,11 @@ from typing import List, Tuple
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlowWithReload
 from homeassistant.core import callback
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 
 from .const import (
     CONF_MARKET_AREA,
@@ -25,6 +30,7 @@ from .const import (
     CONF_TAX,
     CONF_TOKEN,
     CONF_DURATION,
+    CONF_BACKUP_ENTRY,
     CONFIG_VERSION,
     DEFAULT_DURATION,
     DEFAULT_SURCHARGE_ABS,
@@ -162,6 +168,17 @@ class EpexSpotOptionsFlow(OptionsFlowWithReload):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
+        # Get backup entries
+        current_entries = self.hass.config_entries.async_entries(DOMAIN)
+        backup_options = [{"value": "none", "label": "none"}]
+        for entry in current_entries:
+            if entry.entry_id != self.config_entry.entry_id:
+                backup_options.append({
+                    "value": entry.entry_id,
+                    "label": entry.title
+                })
+
+        # Get source parameters
         _, durations, _ = getParametersForSource(
             self.config_entry.data.get(CONF_SOURCE)
         )
@@ -170,6 +187,13 @@ class EpexSpotOptionsFlow(OptionsFlowWithReload):
             step_id="init",
             data_schema=vol.Schema(
                 {
+                    vol.Optional(CONF_BACKUP_ENTRY, default="none"): SelectSelector(
+                        SelectSelectorConfig(
+                            options=backup_options,
+                            mode=SelectSelectorMode.DROPDOWN,
+                            translation_key="backup_entry_id"
+                        )
+                    ),
                     vol.Optional(
                         CONF_SURCHARGE_PERC,
                         default=self.config_entry.options.get(

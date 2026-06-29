@@ -276,6 +276,9 @@ class EpexSpotDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     f"Failed to fetch new data for {self.source.name} after {self._error_count} attempts. "
                     f"Existing market data remains active. Error: {err}"
                 )
+                # Try backup
+                if not self.source.has_data_today or (not self.source.has_data_tomorrow and dt.now().hour > 20):
+                    await self.source.async_load_backup_cache()
             else:
                 _LOGGER.info(f"Fetch attempt {self._error_count} failed for {self.source.name}: {err}")
 
