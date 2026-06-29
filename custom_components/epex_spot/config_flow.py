@@ -157,8 +157,6 @@ class EpexSpotConfigFlow(ConfigFlow, domain=DOMAIN):  # type: ignore
             if CONF_TOKEN in user_input:
                 data[CONF_TOKEN] = user_input[CONF_TOKEN]
             options = {CONF_DURATION: DEFAULT_DURATION}
-            if CONF_DURATION in user_input:
-                options[CONF_DURATION] = int(user_input[CONF_DURATION])
 
             return self.async_create_entry(
                 title=title,
@@ -185,8 +183,6 @@ class EpexSpotOptionsFlow(OptionsFlowWithReload):
     async def async_step_init(self, user_input=None):
         """Manage the options."""
         if user_input is not None:
-            if CONF_DURATION in user_input:
-                user_input[CONF_DURATION] = int(user_input[CONF_DURATION])
             return self.async_create_entry(title="", data=user_input)
 
         _, durations, _ = getParametersForSource(
