@@ -47,9 +47,12 @@ You can choose between multiple sources:
 9. Jeroen.nl
    [Jeroen.nl](https://jeroen.nl/account/feeds) Is an independent platform about energy and offers a free API with Dutch EPEX Spot rates to registered users. The API is limited to a maximum of 10 requests per day, but this integration already handles this appropriately.
 
-9. EnergyZero
+10. EnergyZero
    [EnergyZero](https://external.docs.api.staging.energyzero.nl/docs/api/rest/public/energy-market-service-get-prices) provides a public API that offers EPEX Spot market prices for the Netherlands. EnergyZero acts as the back-end platform and price provider for various dynamic energy labels, including **ANWB Energie**, **Greenchoice**, **Energie van Ons**, **Mijndomein Energie**, and **Vrijopnaam**. No registration or API token is required.
-   
+
+11. Nord Pool
+    [Nord Pool](https://data.nordpoolgroup.com/auction/day-ahead/prices) runs the leading power market in Europe. They provide data without an API token for multiple countries.
+
 If you like this component, please give it a star on [github](https://github.com/mampfes/hacs_epex_spot).
 
 ## Installation

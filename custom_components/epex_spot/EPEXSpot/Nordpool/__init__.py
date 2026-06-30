@@ -1,9 +1,9 @@
 """Nordpool API Client."""
 
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, timedelta, timezone
 import logging
 import aiohttp
-from typing import List, Optional
+from typing import List
 
 from ...common import Marketprice
 
@@ -57,11 +57,11 @@ class Nordpool:
 
     async def fetch(self):
         try:
-            today = datetime.now(timezone.utc).date()
+            today = date.today()
             json_data = await self._fetch_data(fetch_date=today)
             marketdata = self._extract_marketdata(json_data)
         except Exception as err:
-            _LOGGER.debug("Unexpected error fetching today data: %s", err)
+            _LOGGER.debug(f"Unexpected error fetching today data: {err}")
             raise
 
         try:
@@ -69,7 +69,7 @@ class Nordpool:
             json_data = await self._fetch_data(fetch_date=tomorrow)
             marketdata.extend(self._extract_marketdata(json_data))
         except Exception as err:
-            _LOGGER.debug("Unexpected error fetching tomorrow data: %s", err)
+            _LOGGER.debug(f"Unexpected error fetching tomorrow data: {err}")
 
         self._marketdata = marketdata
 
@@ -103,8 +103,8 @@ class Nordpool:
             if self._market_area not in entry_per_area:
                 continue
 
-            start_utc = datetime.fromisoformat(entry['deliveryStart'].replace('Z', '+00:00'))
-            end_utc = datetime.fromisoformat(entry['deliveryEnd'].replace('Z', '+00:00'))
+            start_utc = datetime.fromisoformat(entry['deliveryStart'])
+            end_utc = datetime.fromisoformat(entry['deliveryEnd'])
             duration = int((end_utc - start_utc).total_seconds() / 60)
             price = (entry_per_area[self._market_area]) / 1000
             extract.append(Marketprice(start_time=start_utc, duration=duration, price=price))
