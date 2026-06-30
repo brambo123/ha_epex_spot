@@ -26,6 +26,7 @@ from custom_components.epex_spot.const import (
     CONF_SOURCE_ENERGYCHARTS,
     CONF_SOURCE_SMARD_DE,
     CONF_SOURCE_SMARTENERGY,
+    CONF_SOURCE_NORDPOOL,
     CONF_SOURCE_TIBBER,
     CONF_SOURCE_HOFER_GRUENSTROM,
     CONF_SOURCE_ENERGYZERO,
@@ -51,6 +52,7 @@ from custom_components.epex_spot.EPEXSpot import (
     smartENERGY,
     ENTSOE,
     EnergyCharts,
+    Nordpool,
     HoferGruenstrom,
     EnergyZero,
     Jeroen,
@@ -116,6 +118,12 @@ class SourceShell:
             self._source = EnergyCharts.EnergyCharts(
                 market_area=config_entry.data[CONF_MARKET_AREA],
                 duration=int(config_entry.options.get(CONF_DURATION, DEFAULT_DURATION)),
+                session=session,
+            )
+        elif config_entry.data[CONF_SOURCE] == CONF_SOURCE_NORDPOOL:
+            self._source = Nordpool.Nordpool(
+                market_area=config_entry.data[CONF_MARKET_AREA],
+                duration=config_entry.options.get(CONF_DURATION, DEFAULT_DURATION),
                 session=session,
             )
         elif config_entry.data[CONF_SOURCE] == CONF_SOURCE_HOFER_GRUENSTROM:

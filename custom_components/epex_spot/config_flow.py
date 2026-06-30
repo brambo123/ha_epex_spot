@@ -25,6 +25,7 @@ from .const import (
     CONF_SOURCE_TIBBER,
     CONF_SOURCE_ENERGYFORECAST,
     CONF_SOURCE_ENERGYCHARTS,
+    CONF_SOURCE_NORDPOOL,
     CONF_SOURCE_HOFER_GRUENSTROM,
     CONF_SOURCE_ENERGYZERO,
     CONF_SOURCE_JEROEN,
@@ -51,6 +52,7 @@ from .EPEXSpot import (
     Energyforecast,
     ENTSOE,
     EnergyCharts,
+    Nordpool,
     HoferGruenstrom,
     EnergyZero,
     Jeroen,
@@ -64,6 +66,7 @@ CONF_SOURCE_LIST = (
     CONF_SOURCE_TIBBER,
     CONF_SOURCE_ENERGYFORECAST,
     CONF_SOURCE_ENERGYCHARTS,
+    CONF_SOURCE_NORDPOOL,
     CONF_SOURCE_HOFER_GRUENSTROM,
     CONF_SOURCE_ENERGYZERO,
     CONF_SOURCE_JEROEN,
@@ -312,6 +315,12 @@ def getParametersForSource(
         return (
             sorted(EnergyCharts.EnergyCharts.MARKET_AREAS),
             EnergyCharts.EnergyCharts.SUPPORTED_DURATIONS,
+            False,
+        )
+    if source_name == CONF_SOURCE_NORDPOOL:
+        return (
+            sorted(Nordpool.Nordpool.MARKET_AREAS),
+            Nordpool.Nordpool.SUPPORTED_DURATIONS,
             False,
         )
     if source_name == CONF_SOURCE_HOFER_GRUENSTROM:
