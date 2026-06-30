@@ -72,6 +72,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     source = SourceShell(hass, entry, async_get_clientsession(hass))
     await source.async_load_cache()
+    source.update_time()
+    if not source.has_data_today:
+        await source.async_load_backup_cache()
+        source.update_time()
 
     coordinator = EpexSpotDataUpdateCoordinator(hass, source=source)
 

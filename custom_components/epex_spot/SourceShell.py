@@ -291,7 +291,7 @@ class SourceShell:
 
     async def async_load_backup_cache(self) -> None:
         """Load marketdata from the backup cache file."""
-        backup_id = self._config_entry.data.get(CONF_BACKUP_ENTRY, "none")
+        backup_id = self._config_entry.options.get(CONF_BACKUP_ENTRY, "none")
         if backup_id != "none":
             _LOGGER.info(f"Attempting to read backup cache from entry {backup_id}")
             try:
