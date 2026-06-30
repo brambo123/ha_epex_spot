@@ -123,7 +123,7 @@ class SourceShell:
         elif config_entry.data[CONF_SOURCE] == CONF_SOURCE_NORDPOOL:
             self._source = Nordpool.Nordpool(
                 market_area=config_entry.data[CONF_MARKET_AREA],
-                duration=config_entry.options.get(CONF_DURATION, DEFAULT_DURATION),
+                duration=int(config_entry.options.get(CONF_DURATION, DEFAULT_DURATION)),
                 session=session,
             )
         elif config_entry.data[CONF_SOURCE] == CONF_SOURCE_HOFER_GRUENSTROM:
@@ -135,13 +135,13 @@ class SourceShell:
         elif config_entry.data[CONF_SOURCE] == CONF_SOURCE_ENERGYZERO:
             self._source = EnergyZero.EnergyZero(
                 market_area=config_entry.data[CONF_MARKET_AREA],
-                duration=config_entry.options.get(CONF_DURATION, DEFAULT_DURATION),
+                duration=int(config_entry.options.get(CONF_DURATION, DEFAULT_DURATION)),
                 session=session,
             )
         elif config_entry.data[CONF_SOURCE] == CONF_SOURCE_JEROEN:
             self._source = Jeroen.Jeroen(
                 market_area=config_entry.data[CONF_MARKET_AREA],
-                duration=config_entry.options.get(CONF_DURATION, DEFAULT_DURATION),
+                duration=int(config_entry.options.get(CONF_DURATION, DEFAULT_DURATION)),
                 token=self._config_entry.data[CONF_TOKEN],
                 session=session,
             )
