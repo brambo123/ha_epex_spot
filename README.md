@@ -65,6 +65,29 @@ In case you would like to install manually:
 
    [![Open your Home Assistant instance and start setting up a new integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start?domain=epex_spot)
 
+## 🔄 Fallback Source (Backup Mechanism)
+
+To ensure your energy automations never fail due to temporary API outages, the integration includes a robust **Fallback Source** mechanism. This allows one EPEX Spot integration instance to automatically fetch price data from another instance if its primary API goes offline.
+
+### How it works
+If your primary data source fails to fetch today's energy prices, the integration will seamlessly check your configured Fallback Source. If that source contains valid data, it will be loaded into your primary sensors. 
+
+You will receive a persistent notification in Home Assistant whenever a fallback event occurs, so you always know where your data is coming from.
+
+### Configuration Steps
+
+1. **Set up the secondary instance:** Add a second EPEX Spot integration (e.g., using a different API provider like EnergyZero, Entso-E, or Frank Energie).
+2. **Configure the primary instance:** Go to the settings of your primary EPEX Spot integration and select your secondary instance in the **Fallback source** dropdown.
+
+> ⚠️ **Important:** Both the primary integration and the fallback integration **must** have the exact same **Slot duration** configured (e.g., both set to 60 minutes or both set to 15 minutes). If the durations do not match, the fallback data will be ignored to prevent sensor corruption.
+
+### Advanced: Daisy-Chaining Fallbacks 🔗
+You can chain multiple backup sources together for maximum redundancy. For example:
+* **Instance A** (Your main sensors) uses **Instance B** as its Fallback source.
+* **Instance B** uses **Instance C** as its Fallback source.
+
+If both the APIs for Instance A and Instance B are down, Instance A will automatically traverse the chain and pull its data all the way from Instance C!
+
 ## Sensors
 
 This integration provides the following sensors:
