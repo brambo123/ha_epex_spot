@@ -6,6 +6,7 @@ from typing import Any
 
 import aiohttp
 
+from homeassistant.components import persistent_notification
 from homeassistant.helpers.storage import Store
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.util import dt
@@ -13,6 +14,7 @@ from homeassistant.helpers import template as template_helper
 from .common import Marketprice
 
 from custom_components.epex_spot.const import (
+    DOMAIN,
     CONF_DURATION,
     CONF_EARLIEST_START_POST,
     CONF_EARLIEST_START_TIME,
@@ -393,9 +395,34 @@ class SourceShell:
                         if today_points >= self.minimal_daily_points:
                             self._source._marketdata = backup_marketdata
                             _LOGGER.info(f"Successfully loaded backup data from other entry cache!")
+                            self.trigger_backup_notification("backup_fallback")
                             return
 
             except Exception as err:  # pylint: disable=broad-except
                 _LOGGER.error(f"Failed to read backup entry cache: {err}")
 
-        _LOGGER.error(f"No live data and no valid backup data available for {self.name}")
+            _LOGGER.error(f"No live data and no valid backup data available for {self.name}")
+            self.trigger_backup_notification("no_data_backup_failed")
+
+        else:
+            self.trigger_backup_notification("no_data_no_backup")
+
+    def trigger_backup_notification(self, issue_key: str) -> None: 
+        notification_id = f"{DOMAIN}_{self._config_entry.entry_id}_backup"
+
+        if issue_key == "backup_fallback":
+            title = f"[{self._config_entry.title}] Primary API Offline"
+            message = "The primary API source is currently offline. The integration has successfully loaded backup data from your fallback source."
+        elif issue_key == "no_data_no_backup":
+            title = f"[{self._config_entry.title}] No Price Data Available"
+            message = "The primary API source is offline and no fallback source has been configured. Price sensors will be unavailable until the service restores."
+        else:  # no_data_backup_failed
+            title = f"[{self._config_entry.title}] All Data Sources Offline"
+            message = "The primary API source is offline and your configured fallback source does not contain valid data for today. Price sensors will be unavailable."
+
+        persistent_notification.create(
+            self._hass,
+            title=title,
+            message=message,
+            notification_id=notification_id,
+        )
