@@ -164,15 +164,16 @@ class EnergyCharts:
         entries: List[Marketprice] = []
 
         for ts, price_mwh in zip(unix_seconds, prices):
-            start_time = datetime.fromtimestamp(ts, tz=timezone.utc)
-            price_kwh = float(price_mwh) / 1000.0
+            if price_mwh:
+                start_time = datetime.fromtimestamp(ts, tz=timezone.utc)
+                price_kwh = float(price_mwh) / 1000.0
 
-            entries.append(
-                Marketprice(
-                    start_time=start_time,
-                    duration=duration,
-                    price=round(price_kwh, 6),
+                entries.append(
+                    Marketprice(
+                        start_time=start_time,
+                        duration=duration,
+                        price=round(price_kwh, 6),
+                    )
                 )
-            )
 
         return entries
