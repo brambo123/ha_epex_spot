@@ -156,7 +156,9 @@ class EpexSpotConfigFlow(ConfigFlow, domain=DOMAIN):  # type: ignore
             data = {CONF_SOURCE: self._source_name, CONF_MARKET_AREA: market_area}
             if CONF_TOKEN in user_input:
                 data[CONF_TOKEN] = user_input[CONF_TOKEN]
-            options = {CONF_DURATION: DEFAULT_DURATION}
+            options = {CONF_DURATION: str(DEFAULT_DURATION)}
+            if CONF_DURATION in user_input:
+                options[CONF_DURATION] = user_input[CONF_DURATION]
 
             return self.async_create_entry(
                 title=title,
