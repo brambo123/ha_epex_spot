@@ -85,7 +85,7 @@ You will receive a persistent notification in Home Assistant whenever a fallback
 
 ### Configuration Steps
 
-1. **Set up the secondary instance:** Add a second EPEX Spot integration (e.g., using a different API provider like EnergyZero, Entso-E, or Frank Energie).
+1. **Set up the secondary instance:** Add a second EPEX Spot integration (e.g., using a different API provider).
 2. **Configure the primary instance:** Go to the settings of your primary EPEX Spot integration and select your secondary instance in the **Fallback source** dropdown.
 
 > ⚠️ **Important:** Both the primary integration and the fallback integration **must** have the exact same **Slot duration** configured (e.g., both set to 60 minutes or both set to 15 minutes). If the durations do not match, the fallback data will be ignored to prevent sensor corruption.
