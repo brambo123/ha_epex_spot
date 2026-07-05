@@ -51,7 +51,7 @@ class Jeroen:
 
     async def fetch(self):
         """Fetch market price data efficiently from Jeroen.nl."""
-        now = datetime.now()
+        now = dt_util.now()
         today_date = now.date()
         tomorrow_date = today_date + timedelta(days=1)
 
@@ -68,7 +68,8 @@ class Jeroen:
         # Sort and cleanup
         self._marketdata.sort(key=lambda x: x.start_time)
         self._marketdata = [
-            e for e in self._marketdata if e.start_time.date() >= today_date
+            e for e in self._marketdata 
+            if dt_util.as_local(e.start_time).date() >= today_date
         ]
 
 
