@@ -107,6 +107,6 @@ class Nordpool:
             end_utc = datetime.fromisoformat(entry['deliveryEnd'])
             duration = int((end_utc - start_utc).total_seconds() / 60)
             price = (entry_per_area[self._market_area]) / 1000
-            extract.append(Marketprice(start_time=start_utc, duration=duration, price=price))
+            extract.append(Marketprice(start_time=start_utc, duration=duration, price=round(price, 6)))
 
         return extract
