@@ -2,12 +2,15 @@ import pytest
 import aiohttp
 
 class CentralMockResponse:
-    def __init__(self, json_data, status):
-        self._json_data = json_data
+    def __init__(self, data, status):
+        self._data = data
         self.status = status
 
     async def json(self):
-        return self._json_data
+        return self._data
+        
+    async def text(self):
+        return self._data
 
     def raise_for_status(self):
         if self.status >= 400:

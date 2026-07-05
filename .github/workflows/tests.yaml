@@ -23,7 +23,7 @@ jobs:
           pip install ruff
 
       - name: Run Ruff Linter
-        run: ruff check custom_components/ha_epex_spot/
+        run: ruff check custom_components/epex_spot/
 
   pytest:
     runs-on: ubuntu-latest

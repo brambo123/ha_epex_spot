@@ -17,27 +17,6 @@
           "token": "API Token"
         },
         "description": "{ssl_warning}"
-      },
-      "options": {
-        "title": "Epex Spot Options",
-        "description": "Configure surcharges and tax to calculate total price per kWh, our use custom price templates. Check out our [ready-to-use energy provider templates]({docs_templates_url})!",
-        "data": {
-          "backup_entry_id": "Fallback source",
-          "percentage_surcharge": "Percentage Surcharge (%)",
-          "absolute_surcharge": "Absolute Surcharge (€/£ per kWh)",
-          "tax": "Tax (%)",
-          "import_template": "Import price template",
-          "export_template": "Export price template"
-        },
-        "data_description": {
-          "backup_entry_id": "Use this source if no valid marketdata is available",
-          "tax": "Like Value Added Tax (VAT)"
-        },
-        "data_options": {
-          "backup_entry_id": {
-            "none": "No fallback source"
-          }
-        }
       }
     }
   },
@@ -58,11 +37,6 @@
         "data_description": {
           "backup_entry_id": "Use this source if no valid marketdata is available",
           "tax": "Like Value Added Tax (VAT)"
-        },
-        "data_options": {
-          "backup_entry_id": {
-            "none": "No fallback source"
-          }
         }
       }
     }
