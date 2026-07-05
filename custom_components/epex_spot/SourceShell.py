@@ -394,7 +394,7 @@ class SourceShell:
                         )
                         if today_points >= self.minimal_daily_points:
                             self._source._marketdata = backup_marketdata
-                            _LOGGER.info(f"Successfully loaded backup data from other entry cache!")
+                            _LOGGER.info("Successfully loaded backup data from other entry cache!")
                             self.trigger_backup_notification("backup_fallback")
                             return
 

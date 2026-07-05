@@ -1,6 +1,6 @@
 """Nordpool API Client."""
 
-from datetime import datetime, date, timedelta, timezone
+from datetime import datetime, date, timedelta
 import logging
 import aiohttp
 from typing import List

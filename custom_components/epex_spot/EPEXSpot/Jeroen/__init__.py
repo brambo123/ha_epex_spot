@@ -1,6 +1,6 @@
 """Jeroen.nl API."""
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 import aiohttp
 import logging
 
