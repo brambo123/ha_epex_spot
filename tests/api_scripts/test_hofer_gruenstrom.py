@@ -65,13 +65,11 @@ async def test_hofer_gruenstrom_api_mock(mocker, mock_response):
             call_today_args, call_today_kwargs = get_mock.call_args_list[0]
             expected_url_today = "https://www.xn--hofer-grnstrom-nsb.at/service/energy-manager/spot-prices?year=2026&month=7&day=5"
             assert call_today_args[0] == expected_url_today
-            assert call_today_kwargs["ssl"] is False
             
             # Inspect the second call (Tomorrow)
             call_tomorrow_args, call_tomorrow_kwargs = get_mock.call_args_list[1]
             expected_url_tomorrow = "https://www.xn--hofer-grnstrom-nsb.at/service/energy-manager/spot-prices?year=2026&month=7&day=6"
             assert call_tomorrow_args[0] == expected_url_tomorrow
-            assert call_tomorrow_kwargs["ssl"] is False
             
             # Validate combined market data processing
             assert service.marketdata is not None

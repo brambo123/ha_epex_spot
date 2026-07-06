@@ -110,10 +110,7 @@ class HoferGruenstrom:
     async def _fetch_data_for_date(self, date):
         """Fetch data for a specific date."""
         url = f"{self.URL}?year={date.year}&month={date.month}&day={date.day}"
-        # unfortunately it is required to set `ssl` to false since the certificate is not publicly trusted.
-        # the main reason for this might be that the API is not really meant to be used externally, but just from
-        # Hofer Grünstrom's website (https://www.hofer-grünstrom.at/tarife-zum-geld-sparen#spot).
-        async with self._session.get(url, ssl=False) as response:
+        async with self._session.get(url) as response:
             if response.status != 200:
                 if response.status == 204:
                     _LOGGER.debug("No data available for %s yet.", date.isoformat())
