@@ -6,10 +6,10 @@ from typing import List
 
 import aiohttp
 
+from homeassistant.util import dt as dt_util
+
 from ...const import UOM_EUR_PER_KWH
 from ...common import Marketprice
-
-# from homeassistant.util import dt
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,24 +67,23 @@ class SMARD:
 
     async def fetch(self):
         smard_filter = MARKET_AREA_MAP[self._market_area]
-        smard_region = self._market_area
 
         # get available timestamps for given market area
-        url = f"{self.URL}/{smard_filter}/{smard_region}/index_{self._resolution}.json"
+        url = f"{self.URL}/{smard_filter}/DE/index_{self._resolution}.json"
         async with self._session.get(url) as resp:
             resp.raise_for_status()
             j = await resp.json()
 
-        # fetch last 2 data-series, because on sunday noon starts a new series
-        # and then some data is missing
-        latest_timestamp = j["timestamps"][-2:]
+        # select required timestamp 
+        start_of_today = int(dt_util.start_of_local_day().timestamp() * 1000)
+        latest_timestamp = j["timestamps"][-1:] if j["timestamps"][-1] <= start_of_today else j["timestamps"][-2:]
 
         entries: List[Marketprice] = []
 
         for lt in latest_timestamp:
             # get available data
             data = await self._fetch_data(
-                lt, smard_filter, smard_region, self._resolution
+                lt, smard_filter, self._resolution
             )
 
             for entry in data["series"]:
@@ -113,9 +112,9 @@ class SMARD:
                 -3 * 24 * 60 // self._duration :
             ]  # limit number of entries to protect HA recorder
 
-    async def _fetch_data(self, timestamp, market, region, resolution):
+    async def _fetch_data(self, timestamp, market, resolution):
         # get available data
-        url = f"{self.URL}/{market}/{region}/{market}_{region}_{resolution}_{timestamp}.json"  # noqa: E501
+        url = f"{self.URL}/{market}/DE/{market}_DE_{resolution}_{timestamp}.json"  # noqa: E501
         async with self._session.get(url) as resp:
             resp.raise_for_status()
             return await resp.json()
