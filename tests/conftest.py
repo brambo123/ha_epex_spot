@@ -1,5 +1,6 @@
 import pytest
 import aiohttp
+from homeassistant.util import dt as dt_util
 
 class CentralMockResponse:
     def __init__(self, data, status):
@@ -30,3 +31,11 @@ def mock_response():
     def _create_mock(json_data, status=200):
         return CentralMockResponse(json_data, status)
     return _create_mock
+
+@pytest.fixture(autouse=True)
+def set_home_assistant_timezone():
+    original_tz = dt_util.DEFAULT_TIME_ZONE
+    tz = dt_util.get_time_zone("Europe/Amsterdam")
+    dt_util.set_default_time_zone(tz)
+    yield
+    dt_util.set_default_time_zone(original_tz)

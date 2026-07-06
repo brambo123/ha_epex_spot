@@ -35,12 +35,12 @@ async def test_awattar_api_mock(mocker, mock_response):
     check = {"at": 15, "de": 60}
     
     # Pre-calculate expected timestamps based on the frozen time (July 5, 2026)
-    # Start: July 4, 2026 00:00:00 UTC
-    expected_start_dt = datetime(2026, 7, 4, 0, 0, 0, tzinfo=timezone.utc)
+    # Start: July 4, 2026 00:00:00 CET
+    expected_start_dt = datetime(2026, 7, 4, 0, 0, 0).astimezone()
     expected_start_ms = int(expected_start_dt.timestamp() * 1000)
     
-    # End: July 7, 2026 00:00:00 UTC
-    expected_end_dt = datetime(2026, 7, 7, 0, 0, 0, tzinfo=timezone.utc)
+    # End: July 7, 2026 00:00:00 CET
+    expected_end_dt = datetime(2026, 7, 7, 0, 0, 0).astimezone()
     expected_end_ms = int(expected_end_dt.timestamp() * 1000)
 
     for area, duration in check.items():
