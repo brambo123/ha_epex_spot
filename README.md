@@ -42,8 +42,6 @@ You can choose between multiple sources:
 8. Hofer Grünstrom
    [Hofer Grünstrom](https://www.hofer-grünstrom.at/tarife-zum-geld-sparen#spot) has an open API for accessing market data for Austria. So far no user identification is required. (This API is not officially documented, but was discovered by reverse engineering the Hofer Grünstrom website.)
 
-   ⚠️ **Note:** The SSL certificate used by the Hofer Grünstrom API is not trusted publicly. Therefore, when using this source, the integration will ignore SSL certificate verification. This is a potential security risk, so please be aware of this when using this source.
-   
 9. Jeroen.nl
    [Jeroen.nl](https://jeroen.nl/account/feeds) Is an independent platform about energy and offers a free API with Dutch EPEX Spot rates to registered users. The API is limited to a maximum of 10 requests per day, but this integration already handles this appropriately.
 
@@ -53,7 +51,7 @@ You can choose between multiple sources:
 11. Nord Pool
     [Nord Pool](https://data.nordpoolgroup.com/auction/day-ahead/prices) runs the leading power market in Europe. They provide data without an API token for multiple countries.
 
-If you like this component, please give it a star on [github](https://github.com/mampfes/hacs_epex_spot).
+If you like this component, please give it a star on [github](https://github.com/brambo123/ha_epex_spot).
 
 ## Installation
 
@@ -61,7 +59,7 @@ If you like this component, please give it a star on [github](https://github.com
 
 2. Install **EPEX Spot** integration via HACS:
 
-   [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=mampfes&repository=ha_epex_spot)
+   [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=brambo123&repository=ha_epex_spot)
 
 3. Add **EPEX Spot** integration to Home Assistant:
 
@@ -108,7 +106,7 @@ The integration allows you to specify templates for **Import** and **Export** pr
 
 We maintain a dedicated guide with fully commented, production-ready templates for various countries and energy providers.
 
-👉 **[View Advanced Price Templates Guide (docs/templates.md)](docs/templates.md)**
+👉 **[View Advanced Price Templates Guide](https://github.com/brambo123/ha_epex_spot/blob/main/docs/templates.md)**
 
 ## Sensors
 
