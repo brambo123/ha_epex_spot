@@ -103,8 +103,9 @@ class Tibber:
                     Marketprice(
                         duration=self._duration,
                         start_time=datetime.fromisoformat(entry["startsAt"]),
-                        price=round(float(entry["total"]), 6),
+                        price=round(float(entry["energy"]), 6),
                         unit=UOM_EUR_PER_KWH,
+                        attributes={"surcharge": round(float(entry["tax"]), 6)}
                     )
                 )
 
@@ -114,8 +115,9 @@ class Tibber:
                     Marketprice(
                         duration=self._duration,
                         start_time=datetime.fromisoformat(entry["startsAt"]),
-                        price=round(float(entry["total"]), 6),
+                        price=round(float(entry["energy"]), 6),
                         unit=UOM_EUR_PER_KWH,
+                        attributes={"surcharge": round(float(entry["tax"]), 6)}
                     )
                 )
 

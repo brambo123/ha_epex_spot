@@ -21,6 +21,7 @@ from custom_components.epex_spot.const import (
     CONF_LATEST_END_POST,
     CONF_LATEST_END_TIME,
     CONF_MARKET_AREA,
+    CONF_PRICE_TYPE,
     CONF_SOURCE,
     CONF_SOURCE_AWATTAR,
     CONF_SOURCE_ENERGYFORECAST,
@@ -59,7 +60,11 @@ from custom_components.epex_spot.EPEXSpot import (
     EnergyZero,
     Jeroen,
 )
-from .extreme_price_interval import find_extreme_price_interval, get_start_times
+from .extreme_price_interval import (
+    calculate_search_window,
+    find_extreme_interval,
+    calc_interval_average_price,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -238,11 +243,13 @@ class SourceShell:
         )
         self._has_data_tomorrow = len(list(marketdata_tomorrow)) >= self.minimal_daily_points
 
-    def to_total_price(self, market_price_per_kwh):
-        total_price = market_price_per_kwh
+    def to_total_price(self, marketprice: Marketprice) -> float:
+        total_price = marketprice.market_price_per_kwh
 
-        # Standard calculation for other cases
-        if "Tibber API" not in self.name:
+        if "surcharge" not in marketprice.attributes:
+            # Retrieve total surcharge from attributes
+            total_price += marketprice.attributes["surcharge"]
+        else:
             # Retrieve tax and surcharge values from config
             surcharge_abs = self._config_entry.options.get(
                 CONF_SURCHARGE_ABS, DEFAULT_SURCHARGE_ABS
@@ -259,77 +266,116 @@ class SourceShell:
 
         return round(total_price, 6)
         
-    def _render_custom_template(self, template_str: str, market_price: float, dt_value) -> float:
+    def _render_custom_template(self, template_str: str, marketprice: Marketprice) -> float:
         """Helper to render a custom Jinja2 template with price and datetime context."""
         if not template_str or template_str.strip() == "":
-            return market_price
+            return marketprice.market_price_per_kwh
 
         try:
             # Create a Home Assistant Template object
             compiled_template = template_helper.Template(template_str, self._hass)
-            
+
             # Context variables available to the end-user
             variables = {
-                "market_price": market_price,
-                "now": lambda: dt.as_local(dt_value),
+                "market_price": marketprice.market_price_per_kwh,
+                "now": lambda: dt.as_local(marketprice.start_time),
+                "attrs": marketprice.attributes
             }
-            
+
             # Render and convert to float
             rendered_value = compiled_template.async_render(variables, parse_result=True)
             return float(rendered_value)
         except Exception as e:
             _LOGGER.error("Error rendering price template '%s': %s. Falling back to market price.", template_str, e)
-            return market_price
+            return market_price.market_price_per_kwh
 
-    def get_import_price(self, market_price_per_kwh: float, dt_value=None) -> float:
+    def get_import_price(self, marketprice: Marketprice) -> float:
         """Calculate custom import price based on user template or fallback to standard calculation."""
         template_str = self._config_entry.options.get(CONF_TEMPLATE_IMPORT, "")
-        
+
         # If user provided a custom template, use it
         if template_str and template_str.strip() != "":
-            target_dt = dt_value if dt_value else dt.now()
-            return round(self._render_custom_template(template_str, market_price_per_kwh, target_dt), 6)
-            
-        # Fallback to the original built-in calculation if template is empty
-        return self.to_total_price(market_price_per_kwh)
+            return round(self._render_custom_template(template_str, marketprice), 6)
 
-    def get_export_price(self, market_price_per_kwh: float, dt_value=None) -> float:
+        # Fallback to the original built-in calculation if template is empty
+        return self.to_total_price(marketprice)
+
+    def get_export_price(self, marketprice: Marketprice) -> float:
         """Calculate custom export price based on user template or fallback to standard calculation."""
         template_str = self._config_entry.options.get(CONF_TEMPLATE_EXPORT, "")
-        
+
         # If user provided a custom template, use it
         if template_str and template_str.strip() != "":
-            target_dt = dt_value if dt_value else dt.now()
-            return round(self._render_custom_template(template_str, market_price_per_kwh, target_dt), 6)
-            
+            return round(self._render_custom_template(template_str, marketprice), 6)
+
         # Fallback to the original built-in calculation if template is empty
-        return self.to_total_price(market_price_per_kwh)
+        return self.to_total_price(marketprice)
 
     def find_extreme_price_interval(self, call_data, cmp):
         duration: timedelta = call_data[CONF_DURATION]
+        price_type = call_data.get(CONF_PRICE_TYPE, "market_price")
 
-        start_times = get_start_times(
-            marketdata=self.marketdata,
+        earliest_start, latest_end = calculate_search_window(
             earliest_start_time=call_data.get(CONF_EARLIEST_START_TIME),
             earliest_start_post=call_data.get(CONF_EARLIEST_START_POST),
             latest_end_time=call_data.get(CONF_LATEST_END_TIME),
             latest_end_post=call_data.get(CONF_LATEST_END_POST),
             latest_market_datetime=self.marketdata[-1].end_time,
-            duration=duration,
         )
 
-        result = find_extreme_price_interval(
-            self.marketdata, start_times, duration, cmp
+        if earliest_start is None or latest_end is None:
+            return EMPTY_EXTREME_PRICE_INTERVAL_RESP
+
+        # 1. Filter market data to the search window (overlapping segments)
+        sub_marketdata = [
+            mp for mp in self.marketdata
+            if mp.end_time > earliest_start and mp.start_time < latest_end
+        ]
+
+        if not sub_marketdata:
+            return EMPTY_EXTREME_PRICE_INTERVAL_RESP
+
+        # 2. Determine price mapping function
+        if price_type == "market_price":
+            price_fn = lambda mp: mp.market_price_per_kwh
+        elif price_type == "total_price":
+            price_fn = self.to_total_price
+        elif price_type == "import_price":
+            price_fn = self.get_import_price
+        elif price_type == "export_price":
+            price_fn = self.get_export_price
+        else:
+            raise ValueError(f"Unknown price type: {price_type}")
+
+        # 3. Map prices over the filtered moments
+        mapped_marketdata = []
+        for mp in sub_marketdata:
+            mapped_price = price_fn(mp)
+            mapped_mp = Marketprice(
+                start_time=mp.start_time,
+                duration=int((mp.end_time - mp.start_time).total_seconds() / 60),
+                price=mapped_price,
+            )
+            mapped_marketdata.append(mapped_mp)
+
+        # 4. Find extreme price interval using the mapped marketdata
+        result = find_extreme_interval(
+            mapped_marketdata, earliest_start, latest_end, duration, cmp
         )
 
         if result is None:
             return EMPTY_EXTREME_PRICE_INTERVAL_RESP
 
+        # 6. Calculate both average market price and average target price for the chosen interval.
+        best_start = dt.as_utc(result["start"])
+        avg_market_price = calc_interval_average_price(sub_marketdata, best_start, duration)
+        avg_mapped_price = result["price"]
+
         return {
             "start": result["start"],
-            "end": result["start"] + duration,
-            "market_price_per_kwh": round(result["market_price_per_hour"], 6),
-            "total_price_per_kwh": self.get_import_price(result["market_price_per_hour"], result["start"]),
+            "end": result["end"],
+            "market_price_per_kwh": round(avg_market_price, 6) if avg_market_price is not None else None,
+            "total_price_per_kwh": round(avg_mapped_price, 6)
         }
 
     async def async_load_cache(self) -> None:

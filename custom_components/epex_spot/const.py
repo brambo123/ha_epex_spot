@@ -46,6 +46,7 @@ CONF_EARLIEST_START_POST = "earliest_start_post"
 CONF_LATEST_END_TIME = "latest_end"
 CONF_LATEST_END_POST = "latest_end_post"
 CONF_DURATION = "duration"
+CONF_PRICE_TYPE = "price_type"
 
 DEFAULT_SURCHARGE_PERC = 3.0
 DEFAULT_SURCHARGE_ABS = 0.1193

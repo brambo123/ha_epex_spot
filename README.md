@@ -97,9 +97,6 @@ If both the APIs for Instance A and Instance B are down, Instance A will automat
 
 ## Advanced Price Templates
 
-> [!NOTE]
-> **Interval Service Behavior:** When using custom price templates, the `find_extreme_price_interval` service will automatically use your evaluated import price template as the base price. However, the integration's built-in `Total Price` calculations (such as fixed surcharges or tax percentages configured in the main options) will **still be applied** on top of it within the service calculation.
-
 The integration allows you to specify templates for **Import** and **Export** prices directly in the integration's Options flow. This is extremely useful for dynamic energy contracts where pricing includes corporate margins, taxes, time-of-day bonuses, or complex national regulations (such as §14a EnWG in Germany or SNAP in Austria).
 
 ### Real-World Examples & Country Configurations
@@ -283,14 +280,15 @@ epex_spot.get_lowest_price_interval
 epex_spot.get_highest_price_interval
 ```
 
-| Service data attribute | Optional | Description                                                                     | Example                          |
-| ---------------------- | -------- | ------------------------------------------------------------------------------- | -------------------------------- |
-| `device_id`            | yes      | A EPEX Spot service instance ID. In case you have multiple EPEX Spot instances. | 9d44d8ce9b19e0863cf574c2763749ac |
-| `earliest_start`       | yes      | Earliest time to start the appliance.                                           | "14:00:00"                       |
-| `earliest_start_post`  | yes      | Postponement of `earliest_start` in days: 0 = today (default), 1= tomorrow      | 0                                |
-| `latest_end`           | yes      | Latest time to end the appliance.                                               | "16:00:00"                       |
-| `latest_end_post`      | yes      | Postponement of `latest_end` in days: 0 = today (default), 1= tomorrow          | 0                                |
-| `duration`             | no       | Required duration to complete appliance.                                        | See below...                     |
+| Service data attribute | Optional | Description                                                                       | Example                          |
+| ---------------------- | -------- | --------------------------------------------------------------------------------- | -------------------------------- |
+| `device_id`            | yes      | A EPEX Spot service instance ID. In case you have multiple EPEX Spot instances.   | 9d44d8ce9b19e0863cf574c2763749ac |
+| `earliest_start`       | yes      | Earliest time to start the appliance.                                             | "14:00:00"                       |
+| `earliest_start_post`  | yes      | Postponement of `earliest_start` in days: 0 = today (default), 1= tomorrow        | 0                                |
+| `latest_end`           | yes      | Latest time to end the appliance.                                                 | "16:00:00"                       |
+| `latest_end_post`      | yes      | Postponement of `latest_end` in days: 0 = today (default), 1= tomorrow            | 0                                |
+| `duration`             | no       | Required duration to complete appliance.                                          | See below...                     |
+| `price_type`           | no       | Which price type to evaluate: market_ (default), total_, import_ or export_price. | "market_price"                   |
 
 Notes:
 

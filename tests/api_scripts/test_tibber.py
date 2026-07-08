@@ -27,13 +27,17 @@ async def test_tibber_api_mock(mocker, mock_response):
                                     "today": [
                                         {
                                             "startsAt": "2026-07-05T12:00:00+02:00",
-                                            "total": 0.254
+                                            "energy": 0.254,
+                                            "tax": 0.0251,
+                                            "total": 0.2791
                                         }
                                     ],
                                     "tomorrow": [
                                         {
                                             "startsAt": "2026-07-06T12:00:00+02:00",
-                                            "total": 0.281
+                                            "energy": 0.281,
+                                            "tax": 0.0251,
+                                            "total": 0.3061
                                         }
                                     ]
                                 }

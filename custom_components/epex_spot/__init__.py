@@ -39,6 +39,7 @@ from .const import (
     CONF_EARLIEST_START_TIME,
     CONF_LATEST_END_POST,
     CONF_LATEST_END_TIME,
+    CONF_PRICE_TYPE,
     CONF_SURCHARGE_ABS,
     CONFIG_VERSION,
     DOMAIN,
@@ -58,6 +59,9 @@ GET_EXTREME_PRICE_INTERVAL_SCHEMA = vol.Schema(
         vol.Optional(CONF_LATEST_END_TIME): cv.time,
         vol.Optional(CONF_LATEST_END_POST): cv.positive_int,
         vol.Required(CONF_DURATION): cv.positive_time_period,
+        vol.Optional(CONF_PRICE_TYPE, default="market_price"): vol.In(
+            ["market_price", "total_price", "import_price", "export_price"]
+        ),
     }
 )
 FETCH_DATA_SCHEMA = vol.Schema(
