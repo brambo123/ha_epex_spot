@@ -40,6 +40,7 @@ class Tibber:
 
     MARKET_AREAS = ("de", "nl", "no", "se")
     SUPPORTED_DURATIONS = (15, 60)
+    REQUIRES_TOKEN = True
 
     def __init__(
         self,

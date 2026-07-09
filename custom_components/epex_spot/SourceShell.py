@@ -47,19 +47,7 @@ from custom_components.epex_spot.const import (
     DEFAULT_TAX,
     EMPTY_EXTREME_PRICE_INTERVAL_RESP,
 )
-from custom_components.epex_spot.EPEXSpot import (
-    SMARD,
-    Awattar,
-    Energyforecast,
-    Tibber,
-    smartENERGY,
-    ENTSOE,
-    EnergyCharts,
-    Nordpool,
-    HoferGruenstrom,
-    EnergyZero,
-    Jeroen,
-)
+from custom_components.epex_spot.EPEXSpot import API_REGISTRY
 from .extreme_price_interval import (
     calculate_search_window,
     find_extreme_interval,
@@ -81,79 +69,24 @@ class SourceShell:
         self._has_data_tomorrow = False
         self._store = Store(self._hass, 1, f"epex_spot.{self._config_entry.entry_id}")
 
-        # create source object
-        if config_entry.data[CONF_SOURCE] == CONF_SOURCE_AWATTAR:
-            self._source = Awattar.Awattar(
-                market_area=config_entry.data[CONF_MARKET_AREA],
-                duration=int(config_entry.options.get(CONF_DURATION, DEFAULT_DURATION)),
-                session=session,
-            )
-        elif config_entry.data[CONF_SOURCE] == CONF_SOURCE_SMARD_DE:
-            self._source = SMARD.SMARD(
-                market_area=config_entry.data[CONF_MARKET_AREA],
-                duration=int(config_entry.options.get(CONF_DURATION, DEFAULT_DURATION)),
-                session=session,
-            )
-        elif config_entry.data[CONF_SOURCE] == CONF_SOURCE_SMARTENERGY:
-            self._source = smartENERGY.smartENERGY(
-                market_area=config_entry.data[CONF_MARKET_AREA],
-                duration=int(config_entry.options.get(CONF_DURATION, DEFAULT_DURATION)),
-                session=session,
-            )
-        elif config_entry.data[CONF_SOURCE] == CONF_SOURCE_TIBBER:
-            self._source = Tibber.Tibber(
-                market_area=config_entry.data[CONF_MARKET_AREA],
-                duration=int(config_entry.options.get(CONF_DURATION, DEFAULT_DURATION)),
-                token=self._config_entry.data[CONF_TOKEN],
-                session=session,
-            )
-        elif config_entry.data[CONF_SOURCE] == CONF_SOURCE_ENERGYFORECAST:
-            self._source = Energyforecast.Energyforecast(
-                market_area=config_entry.data[CONF_MARKET_AREA],
-                duration=int(config_entry.options.get(CONF_DURATION, DEFAULT_DURATION)),
-                token=self._config_entry.data[CONF_TOKEN],
-                session=session,
-            )
-        elif config_entry.data[CONF_SOURCE] == CONF_SOURCE_ENTSOE:
-            self._source = ENTSOE.EntsoeTransparency(
-                market_area=config_entry.data[CONF_MARKET_AREA],
-                duration=int(config_entry.options.get(CONF_DURATION, DEFAULT_DURATION)),
-                token=self._config_entry.data[CONF_TOKEN],
-                session=session,
-            )
-        elif config_entry.data[CONF_SOURCE] == CONF_SOURCE_ENERGYCHARTS:
-            self._source = EnergyCharts.EnergyCharts(
-                market_area=config_entry.data[CONF_MARKET_AREA],
-                duration=int(config_entry.options.get(CONF_DURATION, DEFAULT_DURATION)),
-                session=session,
-            )
-        elif config_entry.data[CONF_SOURCE] == CONF_SOURCE_NORDPOOL:
-            self._source = Nordpool.Nordpool(
-                market_area=config_entry.data[CONF_MARKET_AREA],
-                duration=int(config_entry.options.get(CONF_DURATION, DEFAULT_DURATION)),
-                session=session,
-            )
-        elif config_entry.data[CONF_SOURCE] == CONF_SOURCE_HOFER_GRUENSTROM:
-            self._source = HoferGruenstrom.HoferGruenstrom(
-                market_area=config_entry.data[CONF_MARKET_AREA],
-                duration=int(config_entry.options.get(CONF_DURATION, DEFAULT_DURATION)),
-                session=session,
-            )
-        elif config_entry.data[CONF_SOURCE] == CONF_SOURCE_ENERGYZERO:
-            self._source = EnergyZero.EnergyZero(
-                market_area=config_entry.data[CONF_MARKET_AREA],
-                duration=int(config_entry.options.get(CONF_DURATION, DEFAULT_DURATION)),
-                session=session,
-            )
-        elif config_entry.data[CONF_SOURCE] == CONF_SOURCE_JEROEN:
-            self._source = Jeroen.Jeroen(
-                market_area=config_entry.data[CONF_MARKET_AREA],
-                duration=int(config_entry.options.get(CONF_DURATION, DEFAULT_DURATION)),
-                token=self._config_entry.data[CONF_TOKEN],
-                session=session,
-            )
-        else:
-            raise ValueError(f"Unsupported source: {config_entry.data[CONF_SOURCE]}")
+        # Find correct source object
+        source_name = config_entry.data[CONF_SOURCE]
+
+        if source_name not in API_REGISTRY:
+            raise ValueError(f"Unsupported source: {source_name}")
+
+        # Create source object        
+        api_class = API_REGISTRY[source_name]
+
+        kwargs = {
+            "market_area": config_entry.data[CONF_MARKET_AREA],
+            "duration": int(config_entry.options.get(CONF_DURATION, DEFAULT_DURATION)),
+            "session": session
+        }
+        if getattr(api_class, "REQUIRES_TOKEN", False):
+            kwargs["token"] = self._config_entry.data[CONF_TOKEN]
+
+        self._source = api_class(**kwargs)
 
     @property
     def unique_id(self):

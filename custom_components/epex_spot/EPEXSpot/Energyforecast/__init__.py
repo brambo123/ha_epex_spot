@@ -40,6 +40,7 @@ class Energyforecast:
 
     MARKET_AREAS = ("AT", "BE", "DE-LU", "DK1", "DK2", "FR", "NL", "PL")
     SUPPORTED_DURATIONS = (15, 60)
+    REQUIRES_TOKEN = True
 
     def __init__(
         self,

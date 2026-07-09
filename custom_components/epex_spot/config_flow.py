@@ -44,34 +44,9 @@ from .const import (
     DEFAULT_TAX,
     DOMAIN,
 )
-from .EPEXSpot import (
-    SMARD,
-    Awattar,
-    Tibber,
-    smartENERGY,
-    Energyforecast,
-    ENTSOE,
-    EnergyCharts,
-    Nordpool,
-    HoferGruenstrom,
-    EnergyZero,
-    Jeroen,
-)
+from .EPEXSpot import API_REGISTRY
 
-CONF_SOURCE_LIST = (
-    CONF_SOURCE_AWATTAR,
-    CONF_SOURCE_ENTSOE,
-    CONF_SOURCE_SMARD_DE,
-    CONF_SOURCE_SMARTENERGY,
-    CONF_SOURCE_TIBBER,
-    CONF_SOURCE_ENERGYFORECAST,
-    CONF_SOURCE_ENERGYCHARTS,
-    CONF_SOURCE_NORDPOOL,
-    CONF_SOURCE_HOFER_GRUENSTROM,
-    CONF_SOURCE_ENERGYZERO,
-    CONF_SOURCE_JEROEN,
-)
-
+CONF_SOURCE_LIST = tuple(API_REGISTRY.keys())
 
 class EpexSpotConfigFlow(ConfigFlow, domain=DOMAIN):  # type: ignore
     """Component config flow."""
@@ -270,72 +245,13 @@ def getParametersForSource(
     """
     returns sorted market areas, durations and if given source requires a token
     """
-    # market areas and durations are generally sorted in classes so no need to sort
-    if source_name == CONF_SOURCE_AWATTAR:
-        return (
-            Awattar.Awattar.MARKET_AREAS,
-            Awattar.Awattar.SUPPORTED_DURATIONS,
-            False,
-        )
-    if source_name == CONF_SOURCE_ENERGYFORECAST:
-        return (
-            Energyforecast.Energyforecast.MARKET_AREAS,
-            Energyforecast.Energyforecast.SUPPORTED_DURATIONS,
-            True,
-        )
-    if source_name == CONF_SOURCE_TIBBER:
-        return (
-            Tibber.Tibber.MARKET_AREAS,
-            Tibber.Tibber.SUPPORTED_DURATIONS,
-            True,
-        )
-    if source_name == CONF_SOURCE_SMARD_DE:
-        return (
-            sorted(SMARD.SMARD.MARKET_AREAS),  # not sorted so sort here
-            SMARD.SMARD.SUPPORTED_DURATIONS,
-            False,
-        )
-    if source_name == CONF_SOURCE_SMARTENERGY:
-        return (
-            smartENERGY.smartENERGY.MARKET_AREAS,
-            smartENERGY.smartENERGY.SUPPORTED_DURATIONS,
-            False,
-        )
-    if source_name == CONF_SOURCE_ENTSOE:
-        return (
-            sorted(ENTSOE.EntsoeTransparency.MARKET_AREAS),
-            ENTSOE.EntsoeTransparency.SUPPORTED_DURATIONS,
-            True,
-        )
-    if source_name == CONF_SOURCE_ENERGYCHARTS:
-        return (
-            sorted(EnergyCharts.EnergyCharts.MARKET_AREAS),
-            EnergyCharts.EnergyCharts.SUPPORTED_DURATIONS,
-            False,
-        )
-    if source_name == CONF_SOURCE_NORDPOOL:
-        return (
-            sorted(Nordpool.Nordpool.MARKET_AREAS),
-            Nordpool.Nordpool.SUPPORTED_DURATIONS,
-            False,
-        )
-    if source_name == CONF_SOURCE_HOFER_GRUENSTROM:
-        return (
-            HoferGruenstrom.HoferGruenstrom.MARKET_AREAS,
-            HoferGruenstrom.HoferGruenstrom.SUPPORTED_DURATIONS,
-            False,
-        )
-    if source_name == CONF_SOURCE_ENERGYZERO:
-        return (
-            EnergyZero.EnergyZero.MARKET_AREAS,
-            EnergyZero.EnergyZero.SUPPORTED_DURATIONS,
-            False,
-        )
-    if source_name == CONF_SOURCE_JEROEN:
-        return (
-            Jeroen.Jeroen.MARKET_AREAS,
-            Jeroen.Jeroen.SUPPORTED_DURATIONS,
-            True,
-        )
+    if source_name not in API_REGISTRY:
+        raise ValueError(f"Unknown source: {source_name}")
 
-    return ([], [], False)
+    api_class = API_REGISTRY[source_name]
+
+    areas = sorted(list(api_class.MARKET_AREAS))
+    durations = api_class.SUPPORTED_DURATIONS
+    requires_token = getattr(api_class, "REQUIRES_TOKEN", False)
+
+    return areas, durations, requires_token

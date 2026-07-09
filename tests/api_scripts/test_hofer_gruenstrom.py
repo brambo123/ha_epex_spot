@@ -7,7 +7,9 @@ import time_machine
 # Dynamic path fix
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
-from custom_components.epex_spot.EPEXSpot import HoferGruenstrom
+from custom_components.epex_spot.EPEXSpot import API_REGISTRY
+from custom_components.epex_spot.const import CONF_SOURCE_HOFER_GRUENSTROM
+
 
 @pytest.mark.asyncio
 @time_machine.travel("2026-07-05 12:00:00 +0000")  # Freeze time to July 5, 2026
@@ -49,7 +51,8 @@ async def test_hofer_gruenstrom_api_mock(mocker, mock_response):
         get_mock = mocker.patch("aiohttp.ClientSession.get", side_effect=[resp_today, resp_tomorrow])
 
         async with aiohttp.ClientSession() as session:
-            service = HoferGruenstrom.HoferGruenstrom(
+            api_class = API_REGISTRY[CONF_SOURCE_HOFER_GRUENSTROM]
+            service = api_class(
                 market_area="at",
                 duration=duration,
                 session=session

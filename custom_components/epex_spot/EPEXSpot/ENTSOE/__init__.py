@@ -73,9 +73,9 @@ class EntsoeTransparency:
 
     URL = "https://web-api.tp.entsoe.eu/api"
 
-    MARKET_AREAS = MARKET_AREA_MAP.keys()
-
+    MARKET_AREAS = list(MARKET_AREA_MAP.keys())
     SUPPORTED_DURATIONS = (15, 60)
+    REQUIRES_TOKEN = True
 
     def __init__(
         self,

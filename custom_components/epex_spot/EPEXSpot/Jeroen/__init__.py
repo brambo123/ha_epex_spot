@@ -15,6 +15,7 @@ class Jeroen:
 
     MARKET_AREAS = ("nl",)
     SUPPORTED_DURATIONS = (15, 60)
+    REQUIRES_TOKEN = True
 
     def __init__(
         self,

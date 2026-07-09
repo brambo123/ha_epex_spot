@@ -64,8 +64,8 @@ class EnergyCharts:
     URL = "https://api.energy-charts.info/price"
 
     MARKET_AREAS = BIDDING_ZONES
-
     SUPPORTED_DURATIONS = (15, 60)
+    REQUIRES_TOKEN = False
 
     def __init__(self, market_area: str, duration: int, session: aiohttp.ClientSession):
         if market_area not in self.MARKET_AREAS:

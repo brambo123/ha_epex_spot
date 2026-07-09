@@ -6,7 +6,8 @@ import pytest
 # Dynamic path fix
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
-from custom_components.epex_spot.EPEXSpot import Energyforecast
+from custom_components.epex_spot.EPEXSpot import API_REGISTRY
+from custom_components.epex_spot.const import CONF_SOURCE_ENERGYFORECAST
 
 @pytest.mark.asyncio
 async def test_energyforecast_api_mock(mocker, mock_response):
@@ -43,7 +44,8 @@ async def test_energyforecast_api_mock(mocker, mock_response):
 
     for area, duration in test_matrix.items():
         async with aiohttp.ClientSession() as session:
-            service = Energyforecast.Energyforecast(
+            api_class = API_REGISTRY[CONF_SOURCE_ENERGYFORECAST]
+            service = api_class(
                 market_area=area, token=demo_token, session=session, duration=duration
             )
             

@@ -35,8 +35,9 @@ MARKET_AREA_MAP = {
 class SMARD:
     URL = "https://www.smard.de/app/chart_data"
 
-    MARKET_AREAS = MARKET_AREA_MAP.keys()
+    MARKET_AREAS = list(MARKET_AREA_MAP.keys())
     SUPPORTED_DURATIONS = (15, 60)
+    REQUIRES_TOKEN = False
 
     def __init__(self, market_area: str, duration: int, session: aiohttp.ClientSession):
         self._session = session

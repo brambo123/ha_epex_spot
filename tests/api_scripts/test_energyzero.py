@@ -7,7 +7,8 @@ import time_machine
 # Dynamic path fix
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
-from custom_components.epex_spot.EPEXSpot import EnergyZero
+from custom_components.epex_spot.EPEXSpot import API_REGISTRY
+from custom_components.epex_spot.const import CONF_SOURCE_ENERGYZERO
 
 @pytest.mark.asyncio
 @time_machine.travel("2026-07-05 12:00:00 +00:00")  # Freeze time to July 5, 2026
@@ -38,7 +39,8 @@ async def test_energyzero_api_mock(mocker, mock_response):
 
     for area, duration in test_matrix.items():
         async with aiohttp.ClientSession() as session:
-            service = EnergyZero.EnergyZero(
+            api_class = API_REGISTRY[CONF_SOURCE_ENERGYZERO]
+            service = api_class(
                 market_area=area, duration=duration, session=session
             )
             

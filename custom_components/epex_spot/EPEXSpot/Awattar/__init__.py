@@ -38,6 +38,7 @@ class Awattar:
 
     MARKET_AREAS = ("at", "de")
     SUPPORTED_DURATIONS = (60,)
+    REQUIRES_TOKEN = False
 
     def __init__(self, market_area: str, duration: int, session: aiohttp.ClientSession):
         self._session = session

@@ -6,7 +6,8 @@ import time_machine
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
-from custom_components.epex_spot.EPEXSpot import Nordpool
+from custom_components.epex_spot.EPEXSpot import API_REGISTRY
+from custom_components.epex_spot.const import CONF_SOURCE_NORDPOOL
 
 
 @pytest.mark.asyncio
@@ -47,7 +48,8 @@ async def test_nordpool_api_mock(mocker, mock_response):
         get_mock = mocker.patch("aiohttp.ClientSession.get", side_effect=[resp_today, resp_tomorrow])
 
         async with aiohttp.ClientSession() as session:
-            service = Nordpool.Nordpool(
+            api_class = API_REGISTRY[CONF_SOURCE_NORDPOOL]
+            service = api_class(
                 market_area="NL",
                 duration=duration,
                 session=session

@@ -16,6 +16,7 @@ class smartENERGY:
 
     MARKET_AREAS = ("at",)
     SUPPORTED_DURATIONS = (15, 60)
+    REQUIRES_TOKEN = False
 
     def __init__(self, market_area, duration: int, session: aiohttp.ClientSession):
         self._session = session
