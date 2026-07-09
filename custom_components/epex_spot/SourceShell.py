@@ -246,7 +246,7 @@ class SourceShell:
     def to_total_price(self, marketprice: Marketprice) -> float:
         total_price = marketprice.market_price_per_kwh
 
-        if "surcharge" not in marketprice.attributes:
+        if "surcharge" in marketprice.attributes:
             # Retrieve total surcharge from attributes
             total_price += marketprice.attributes["surcharge"]
         else:
