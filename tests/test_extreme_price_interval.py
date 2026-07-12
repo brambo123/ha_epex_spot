@@ -1,4 +1,5 @@
 import pytest
+import time_machine
 from datetime import datetime, time, timedelta
 import zoneinfo
 from custom_components.epex_spot.common import Marketprice
@@ -31,14 +32,14 @@ def marketdata():
         for i, price in enumerate(prices)
     ]
 
-
+@time_machine.travel("2026-07-08 12:00:00 +0000")
 def test_calc_interval_average_price_exact_match(marketdata):
     start_time = datetime(2026, 7, 8, 14, 0, 0, tzinfo=TZ_UTC)
     duration = timedelta(hours=1)
     avg_price = calc_interval_average_price(marketdata, start_time, duration)
     assert avg_price == pytest.approx(0.02)
 
-
+@time_machine.travel("2026-07-08 12:00:00 +0000")
 def test_calc_interval_average_price_overlapping(marketdata):
     # 13:00 - 14:00 is 0.23, 14:00 - 15:00 is 0.02
     # Average should be (0.23 * 0.5) + (0.02 * 0.5) = 0.125
@@ -47,14 +48,14 @@ def test_calc_interval_average_price_overlapping(marketdata):
     avg_price = calc_interval_average_price(marketdata, start_time, duration)
     assert avg_price == pytest.approx(0.125)
 
-
+@time_machine.travel("2026-07-08 12:00:00 +0000")
 def test_calc_interval_average_price_incomplete_coverage(marketdata):
     start_time = datetime(2026, 7, 8, 23, 30, 0, tzinfo=TZ_UTC)
     duration = timedelta(hours=1)
     avg_price = calc_interval_average_price(marketdata, start_time, duration)
     assert avg_price is None
 
-
+@time_machine.travel("2026-07-08 12:00:00 +0000")
 def test_calculate_search_window():
     latest_market = datetime(2026, 7, 9, 0, 0, 0, tzinfo=TZ_UTC)
     start_time = time(10, 0, 0)
@@ -69,7 +70,7 @@ def test_calculate_search_window():
     assert earliest_start.astimezone(TZ_AMSTERDAM).time() == start_time
     assert latest_end.astimezone(TZ_AMSTERDAM).time() == end_time
 
-
+@time_machine.travel("2026-07-08 12:00:00 +0000")
 def test_get_start_times_bugfix_and_corners(marketdata):
     duration = timedelta(hours=1)
     earliest_start, latest_end = calculate_search_window(
@@ -94,7 +95,7 @@ def test_get_start_times_bugfix_and_corners(marketdata):
     ]
     assert [d.astimezone(TZ_UTC) for d in start_times] == expected
 
-
+@time_machine.travel("2026-07-08 12:00:00 +0000")
 def test_find_extreme_price_interval_lowest(marketdata):
     duration = timedelta(minutes=90)
     earliest_start, latest_end = calculate_search_window(
