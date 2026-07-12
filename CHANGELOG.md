@@ -2,7 +2,19 @@
 
 All notable changes to the EPEX Spot integration will be documented in this file.
 
+> [!IMPORTANT]  
+> From version 5.0.1 onwards, Tibber's price information is split into market price and total price. Please ensure you use the correct sensor.
+
 ---
+
+## [5.0.1] [Unpublished]
+
+### 📢 Important change
+* The **Tibber API** now retrieves the bare market price, but still uses the tax information to calculate the total price.
+
+### 🛠️ Improvements & Optimizations
+* **Internal restructuring** - APIs are now loaded more dynamically, making it easier to add new ones later.
+* **API token changeable** - Configured API tokens can now be modified; we also test the token before saving.
 
 ## [5.0.0] - 2026-07-06
 
