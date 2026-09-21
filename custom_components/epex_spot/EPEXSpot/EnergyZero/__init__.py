@@ -4,6 +4,7 @@ from datetime import datetime
 import aiohttp
 import logging
 
+from homeassistant.util import dt as dt_util
 from ...common import Marketprice
 
 _LOGGER = logging.getLogger(__name__)
@@ -49,7 +50,7 @@ class EnergyZero:
 
     async def fetch(self):
         """Fetch market price data using EnergyZero's rolling data window."""
-        now = datetime.now()
+        now = dt_util.now()
 
         date_str = now.strftime("%d-%m-%Y")
         interval = "INTERVAL_QUARTER" if self._duration == 15 else "INTERVAL_HOUR"
