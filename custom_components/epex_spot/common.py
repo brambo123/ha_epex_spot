@@ -11,16 +11,23 @@ class Marketprice:
     def __init__(
         self,
         start_time: datetime,
-        duration: int,
         price: float,
+        duration: int = None,
+        end_time: datetime = None,
         unit: str = UOM_EUR_PER_KWH,
         attributes: dict = None,
     ):
         self._start_time = start_time
-        self._end_time = self._start_time + timedelta(minutes=duration)
         self._market_price_per_kwh = price
         self._unit = unit
         self._attributes = attributes or {}
+
+        if end_time is not None:
+            self._end_time = end_time
+        elif duration is not None:
+            self._end_time = self._start_time + timedelta(minutes=duration)
+        else:
+            raise ValueError("Either 'duration' or 'end_time' must be provided.")
 
     def __repr__(self):
         return f"{self.__class__.__name__}(start: {self._start_time.isoformat()}, end: {self._end_time.isoformat()}, marketprice: {self._market_price_per_kwh} {self._unit}), attributes: {self._attributes})"  # noqa: E501
@@ -32,6 +39,11 @@ class Marketprice:
     @property
     def end_time(self):
         return self._end_time
+
+    @property
+    def duration(self) -> int:
+        delta = self._end_time - self._start_time
+        return int(delta.total_seconds() / 60)
 
     def set_end_time(self, end_time):
         self._end_time = end_time
@@ -63,11 +75,10 @@ class Marketprice:
         """Create a Marketprice instance from a dictionary."""
         start_time = dt.parse_datetime(data["start_time"])
         end_time = dt.parse_datetime(data["end_time"])
-        duration = int((end_time - start_time).total_seconds() / 60)
 
         return cls(
             start_time=start_time,
-            duration=duration,
+            end_time=end_time,
             price=data["price"],
             unit=data.get(data["unit"], UOM_EUR_PER_KWH),
             attributes=data.get("attributes", {}),

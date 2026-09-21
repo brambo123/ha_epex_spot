@@ -16,6 +16,7 @@ All notable changes to the EPEX Spot integration will be documented in this file
 * **Internal restructuring** - APIs are now loaded more dynamically, making it easier to add new ones later.
 * **API token changeable** - Configured API tokens can now be modified; we also test the token before saving.
 * **ENTSO-E** - The API may sometimes return duplicate time series; read only the first one.
+* **Hofer Grünstrom** - Fix Daylight Saving Time handling and 60min price calculations.
 * **Nordpool** - Accept only final prices for EUR (Nord Pool provides preliminary price information).
 * **Fallback support** - Use data from failback source after 16:00 instead of after 21:00.
 
