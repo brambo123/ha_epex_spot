@@ -179,6 +179,7 @@ class EntsoeTransparency:
         else:
             timeseries_list = all_timeseries
 
+        parsed_period = []
         for timeseries in timeseries_list:
             for period in timeseries.findall("ns:Period", ns):
                 time_interval = period.find("ns:timeInterval", ns)
@@ -186,6 +187,11 @@ class EntsoeTransparency:
                 start_dt = datetime.strptime(start_str, "%Y-%m-%dT%H:%MZ").replace(
                     tzinfo=timezone.utc
                 )
+
+                # Ensure we parse a period only ones
+                if start_dt in parsed_period:
+                    continue
+                parsed_period.append(start_dt)
 
                 resolution = period.find("ns:resolution", ns).text
                 duration = resolution_map.get(resolution, 60)
