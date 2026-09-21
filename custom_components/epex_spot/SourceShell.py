@@ -158,8 +158,8 @@ class SourceShell:
 
         # cleanup yesterday's marketdata
         current_date = now.date()
-        self._source.marketdata = [
-            e for e in self._source.marketdata 
+        self._source._marketdata = [
+            e for e in self._source._marketdata 
             if dt.as_local(e.start_time).date() >= current_date
         ]
 
