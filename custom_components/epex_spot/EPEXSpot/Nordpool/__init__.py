@@ -116,7 +116,6 @@ class Nordpool:
                     start_time=start_utc,
                     end_time=end_utc,
                     price=round(price, 6),
-                    unit=get_uom(self._currency),
                 )
             )
 

@@ -53,7 +53,7 @@ async def test_hofer_gruenstrom_api_mock(mocker, mock_response):
         async with aiohttp.ClientSession() as session:
             api_class = API_REGISTRY[CONF_SOURCE_HOFER_GRUENSTROM]
             service = api_class(
-                market_area="at",
+                market_area="AT",
                 duration=duration,
                 session=session
             )

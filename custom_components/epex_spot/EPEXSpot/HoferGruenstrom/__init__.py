@@ -16,6 +16,7 @@ class HoferGruenstrom:
     URL = "https://www.xn--hofer-grnstrom-nsb.at/service/energy-manager/spot-prices"
 
     MARKET_AREAS = ("at",)
+    TIMEZONE_HOFER_GRUENSTROM = ZoneInfo("Europe/Vienna")
     SUPPORTED_DURATIONS = (
         15,
         60,
