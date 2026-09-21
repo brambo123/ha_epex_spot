@@ -97,6 +97,9 @@ class Nordpool:
     ) -> List[Marketprice]:
         extract: List[Marketprice] = []
 
+        assert 'areaStates' not in data or data['currency'] != 'EUR' or data['areaStates'][0]['state'] == 'Final', (
+            'Price received is not yet final.'
+        )
         entries = data.get("multiIndexEntries", [])
         for entry in entries:
             entry_per_area = entry.get("entryPerArea", {})
