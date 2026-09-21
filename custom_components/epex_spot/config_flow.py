@@ -59,7 +59,6 @@ async def _async_validate_token(
     session = async_get_clientsession(hass)
     api_class = API_REGISTRY[source]
     duration = api_class.SUPPORTED_DURATIONS[0]
-    market_area = api_class.SUPPORTED_DURATIONS[0]
     
     try:
         service = api_class(
@@ -71,7 +70,7 @@ async def _async_validate_token(
         await service.fetch()
         return len(service.marketdata) >= 23
     except Exception as err:  # pylint: disable=broad-except
-        _LOGGER.error("Token validation failed for %s: %s", source, err)
+        _LOGGER.error(f"Token validation failed for {source}: {err}", exc_info=True)
         return False
 
 class EpexSpotConfigFlow(ConfigFlow, domain=DOMAIN):  # type: ignore
