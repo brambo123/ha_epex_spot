@@ -290,7 +290,7 @@ class EpexSpotDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 _LOGGER.info(f"Fetch attempt {self._error_count} failed for {self.source.name}: {err}")
 
         # Try backup
-        if not self.source.has_data_today or (not self.source.has_data_tomorrow and dt.now().hour > 20):
+        if not self.source.has_data_today or (not self.source.has_data_tomorrow and dt.now().hour >= 16):
             await self.source.async_load_backup_cache()
 
 
