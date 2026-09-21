@@ -1,11 +1,12 @@
 """Nordpool API Client."""
 
-from datetime import datetime, date, timedelta
+from datetime import date, datetime, timedelta
 import logging
 import aiohttp
 from typing import List
 
 from ...common import Marketprice
+from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,7 +58,7 @@ class Nordpool:
 
     async def fetch(self):
         try:
-            today = date.today()
+            today = dt_util.now().date()
             json_data = await self._fetch_data(fetch_date=today)
             marketdata = self._extract_marketdata(json_data)
         except Exception as err:
@@ -108,8 +109,15 @@ class Nordpool:
 
             start_utc = datetime.fromisoformat(entry['deliveryStart'])
             end_utc = datetime.fromisoformat(entry['deliveryEnd'])
-            duration = int((end_utc - start_utc).total_seconds() / 60)
             price = (entry_per_area[self._market_area]) / 1000
-            extract.append(Marketprice(start_time=start_utc, duration=duration, price=round(price, 6)))
+
+            extract.append(
+                Marketprice(
+                    start_time=start_utc,
+                    end_time=end_utc,
+                    price=round(price, 6),
+                    unit=get_uom(self._currency),
+                )
+            )
 
         return extract
