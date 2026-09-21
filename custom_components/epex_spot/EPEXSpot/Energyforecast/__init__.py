@@ -5,35 +5,10 @@ import logging
 
 import aiohttp
 
-
+from ...common import Marketprice
 from ...const import UOM_EUR_PER_KWH
 
 _LOGGER = logging.getLogger(__name__)
-
-
-class Marketprice:
-    """Marketprice class for Energyforecast."""
-
-    def __init__(self, data):
-        self._start_time = datetime.fromisoformat(data["start"])
-        self._end_time = datetime.fromisoformat(data["end"])
-        self._market_price_per_kwh = round(float(data["price"]), 6)
-
-    def __repr__(self):
-        return f"{self.__class__.__name__}(start: {self._start_time.isoformat()}, end: {self._end_time.isoformat()}, marketprice: {self._market_price_per_kwh} {UOM_EUR_PER_KWH})"  # noqa: E501
-
-    @property
-    def start_time(self):
-        return self._start_time
-
-    @property
-    def end_time(self):
-        return self._end_time
-
-    @property
-    def market_price_per_kwh(self):
-        return self._market_price_per_kwh
-
 
 class Energyforecast:
     URL = "https://www.energyforecast.de/api/v1/predictions/prices_for_ha"
@@ -95,4 +70,16 @@ class Energyforecast:
             return await resp.json()
 
     def _extract_marketdata(self, data):
-        return [Marketprice(entry) for entry in data]
+        entries = []
+        for entry in data:
+            start_time = datetime.fromisoformat(entry["start"])
+            end_time = datetime.fromisoformat(entry["end"])
+            price = round(float(entry["price"]), 6)
+            entries.append(
+                Marketprice(
+                    start_time=start_time,
+                    end_time=end_time,
+                    price=price
+                )
+            )
+        return entries
