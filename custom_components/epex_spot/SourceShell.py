@@ -156,8 +156,14 @@ class SourceShell:
             self._marketdata_now = None
             self._sorted_marketdata_today = []
 
-        # get list of entries for today
+        # cleanup yesterday's marketdata
         current_date = now.date()
+        self._source.marketdata = [
+            e for e in self._source.marketdata 
+            if dt.as_local(e.start_time).date() >= current_date
+        ]
+
+        # get list of entries for today
         sorted_marketdata_today = filter(
             lambda e: dt.as_local(e.start_time).date() == current_date,
             self.marketdata,
