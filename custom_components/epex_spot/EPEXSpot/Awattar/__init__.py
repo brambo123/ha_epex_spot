@@ -1,15 +1,13 @@
 """Awattar API."""
 
-from datetime import datetime, timedelta, timezone
 import logging
-from typing import List
+from datetime import datetime, timedelta, timezone
 
 import aiohttp
-
 from homeassistant.util import dt as dt_util
 
 from ...common import Marketprice, compress_marketdata
-from ...const import EUR_PER_MWH, UOM_EUR_PER_KWH
+from ...const import EUR_PER_MWH
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,7 +46,7 @@ class Awattar:
         return "EUR"
 
     @property
-    def marketdata(self) -> List[Marketprice]:
+    def marketdata(self) -> list[Marketprice]:
         return self._marketdata
 
     async def fetch(self):
@@ -69,7 +67,7 @@ class Awattar:
             resp.raise_for_status()
             return await resp.json()
 
-    def _extract_marketdata(self, data) -> List[Marketprice]:
+    def _extract_marketdata(self, data) -> list[Marketprice]:
         entries = []
         for entry in data:
             assert entry["unit"].lower() == EUR_PER_MWH.lower()

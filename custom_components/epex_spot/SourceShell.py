@@ -1,20 +1,18 @@
 """SourceShell"""
 
-from datetime import timedelta
 import logging
+from datetime import timedelta
 from typing import Any
 
 import aiohttp
-
 from homeassistant.components import persistent_notification
-from homeassistant.helpers.storage import Store
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.util import dt
 from homeassistant.helpers import template as template_helper
-from .common import Marketprice
+from homeassistant.helpers.storage import Store
+from homeassistant.util import dt
 
 from custom_components.epex_spot.const import (
-    DOMAIN,
+    CONF_BACKUP_ENTRY,
     CONF_DURATION,
     CONF_EARLIEST_START_POST,
     CONF_EARLIEST_START_TIME,
@@ -23,35 +21,26 @@ from custom_components.epex_spot.const import (
     CONF_MARKET_AREA,
     CONF_PRICE_TYPE,
     CONF_SOURCE,
-    CONF_SOURCE_AWATTAR,
-    CONF_SOURCE_ENERGYFORECAST,
-    CONF_SOURCE_ENTSOE,
-    CONF_SOURCE_ENERGYCHARTS,
-    CONF_SOURCE_SMARD_DE,
-    CONF_SOURCE_SMARTENERGY,
-    CONF_SOURCE_NORDPOOL,
-    CONF_SOURCE_TIBBER,
-    CONF_SOURCE_HOFER_GRUENSTROM,
-    CONF_SOURCE_ENERGYZERO,
-    CONF_SOURCE_JEROEN,
     CONF_SURCHARGE_ABS,
     CONF_SURCHARGE_PERC,
-    CONF_TEMPLATE_IMPORT,
-    CONF_TEMPLATE_EXPORT,
     CONF_TAX,
+    CONF_TEMPLATE_EXPORT,
+    CONF_TEMPLATE_IMPORT,
     CONF_TOKEN,
-    CONF_BACKUP_ENTRY,
     DEFAULT_DURATION,
     DEFAULT_SURCHARGE_ABS,
     DEFAULT_SURCHARGE_PERC,
     DEFAULT_TAX,
+    DOMAIN,
     EMPTY_EXTREME_PRICE_INTERVAL_RESP,
 )
 from custom_components.epex_spot.EPEXSpot import API_REGISTRY
+
+from .common import Marketprice
 from .extreme_price_interval import (
+    calc_interval_average_price,
     calculate_search_window,
     find_extreme_interval,
-    calc_interval_average_price,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -224,9 +213,9 @@ class SourceShell:
             # Render and convert to float
             rendered_value = compiled_template.async_render(variables, parse_result=True)
             return float(rendered_value)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             _LOGGER.error("Error rendering price template '%s': %s. Falling back to market price.", template_str, e)
-            return market_price.market_price_per_kwh
+            return marketprice.market_price_per_kwh
 
     def get_import_price(self, marketprice: Marketprice) -> float:
         """Calculate custom import price based on user template or fallback to standard calculation."""
@@ -336,7 +325,7 @@ class SourceShell:
                         Marketprice.from_dict(e) for e in cached_data["marketdata"]
                     ]
                     self.update_time()
-        except Exception as err:  # pylint: disable=broad-except
+        except (OSError, ValueError, TypeError) as err:
             _LOGGER.warning(f"Error loading EPEX Spot storage cache: {err}")
 
     async def async_save_cache(self) -> None:
@@ -347,7 +336,7 @@ class SourceShell:
                     "duration": self.duration,
                     "marketdata": serializable
                 })
-        except Exception as err:  # pylint: disable=broad-except
+        except (OSError, ValueError, TypeError) as err:
             _LOGGER.warning(f"Error saving EPEX Spot storage cache: {err}")
 
     async def async_load_backup_cache(self) -> None:
@@ -383,7 +372,7 @@ class SourceShell:
                             self.trigger_backup_notification("backup_fallback")
                             return
 
-            except Exception as err:  # pylint: disable=broad-except
+            except (OSError, ValueError, TypeError) as err:
                 _LOGGER.error(f"Failed to read backup entry cache: {err}")
 
             _LOGGER.error(f"No live data and no valid backup data available for {self.name}")

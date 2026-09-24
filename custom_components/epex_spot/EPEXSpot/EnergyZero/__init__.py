@@ -1,10 +1,11 @@
 """EnergyZero API."""
 
-from datetime import datetime
-import aiohttp
 import logging
+from datetime import datetime
 
+import aiohttp
 from homeassistant.util import dt as dt_util
+
 from ...common import Marketprice
 
 _LOGGER = logging.getLogger(__name__)
@@ -89,5 +90,7 @@ class EnergyZero:
             marketdata.sort(key=lambda x: x.start_time)
             self._marketdata = marketdata
 
-        except Exception as e:
-            _LOGGER.error(f"Error fetching EnergyZero data for date {date_str}: {e}")
+        except (aiohttp.ClientError, TimeoutError) as err:
+            _LOGGER.error(f"Error fetching EnergyZero data for date {date_str}: {err}")
+        except (KeyError, ValueError, TypeError) as err:
+            _LOGGER.error(f"Invalid data format received from EnergyZero: {err}")

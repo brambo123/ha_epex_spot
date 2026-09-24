@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
-from typing import List
 
 from homeassistant.util import dt
+
 from .const import UOM_EUR_PER_KWH
 
 
@@ -12,10 +12,10 @@ class Marketprice:
         self,
         start_time: datetime,
         price: float,
-        duration: int = None,
-        end_time: datetime = None,
-        unit: str = UOM_EUR_PER_KWH,
-        attributes: dict = None,
+        duration: int | None = None,
+        end_time: datetime | None = None,
+        unit: str | None = UOM_EUR_PER_KWH,
+        attributes: dict | None = None,
     ):
         self._start_time = start_time
         self._market_price_per_kwh = price
@@ -30,7 +30,7 @@ class Marketprice:
             raise ValueError("Either 'duration' or 'end_time' must be provided.")
 
     def __repr__(self):
-        return f"{self.__class__.__name__}(start: {self._start_time.isoformat()}, end: {self._end_time.isoformat()}, marketprice: {self._market_price_per_kwh} {self._unit}), attributes: {self._attributes})"  # noqa: E501
+        return f"{self.__class__.__name__}(start: {self._start_time.isoformat()}, end: {self._end_time.isoformat()}, marketprice: {self._market_price_per_kwh} {self._unit}), attributes: {self._attributes})"
 
     @property
     def start_time(self):
@@ -85,8 +85,8 @@ class Marketprice:
         )
 
 
-def compress_marketdata(data: List[Marketprice], duration: int) -> List[Marketprice]:
-    entries: List[Marketprice] = []
+def compress_marketdata(data: list[Marketprice], duration: int) -> list[Marketprice]:
+    entries: list[Marketprice] = []
     start: Marketprice = None
     for entry in data:
         if start is None:
@@ -109,8 +109,8 @@ def compress_marketdata(data: List[Marketprice], duration: int) -> List[Marketpr
 
 
 def average_marketdata(
-    data: List[Marketprice], target_duration: int
-) -> List[Marketprice]:
+    data: list[Marketprice], target_duration: int
+) -> list[Marketprice]:
     if not data:
         return []
 
@@ -118,7 +118,7 @@ def average_marketdata(
 
     group_size = target_duration // entry_duration
 
-    result: List[Marketprice] = []
+    result: list[Marketprice] = []
 
     for i in range(0, len(data), group_size):
         group = data[i : i + group_size]

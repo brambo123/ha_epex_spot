@@ -1,5 +1,6 @@
-import os
 import inspect
+import os
+
 import pytest
 
 from custom_components.epex_spot.EPEXSpot import API_REGISTRY

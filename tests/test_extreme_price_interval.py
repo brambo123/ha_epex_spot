@@ -1,7 +1,9 @@
+import zoneinfo
+from datetime import datetime, time, timedelta
+
 import pytest
 import time_machine
-from datetime import datetime, time, timedelta
-import zoneinfo
+
 from custom_components.epex_spot.common import Marketprice
 from custom_components.epex_spot.extreme_price_interval import (
     _calc_start_times,

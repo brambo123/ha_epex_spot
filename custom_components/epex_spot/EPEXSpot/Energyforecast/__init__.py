@@ -1,12 +1,11 @@
 """Energyforecast.de"""
 
-from datetime import datetime
 import logging
+from datetime import datetime
 
 import aiohttp
 
 from ...common import Marketprice
-from ...const import UOM_EUR_PER_KWH
 
 _LOGGER = logging.getLogger(__name__)
 

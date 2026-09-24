@@ -1,13 +1,12 @@
 """ENTSO-E Transparency API Client."""
 
-from datetime import datetime, timedelta, timezone
 import enum
 import logging
-import aiohttp
 import xml.etree.ElementTree as ET
-from typing import List
+from datetime import datetime, timedelta, timezone
 
-# Replace this import with your actual Marketprice & compress_marketdata implementations
+import aiohttp
+
 from ...common import Marketprice, average_marketdata
 
 _LOGGER = logging.getLogger(__name__)
@@ -73,7 +72,7 @@ class EntsoeTransparency:
 
     URL = "https://web-api.tp.entsoe.eu/api"
 
-    MARKET_AREAS = list(MARKET_AREA_MAP.keys())
+    MARKET_AREAS = tuple(MARKET_AREA_MAP.keys())
     SUPPORTED_DURATIONS = (15, 60)
     REQUIRES_TOKEN = True
 
@@ -88,7 +87,7 @@ class EntsoeTransparency:
         self._market_area = market_area
         self._duration = duration
         self._token = token
-        self._marketdata: List[Marketprice] = []
+        self._marketdata: list[Marketprice] = []
 
     @property
     def name(self):
@@ -119,10 +118,10 @@ class EntsoeTransparency:
 
         # Compress if needed
         if self._duration != 15:
-            logging.debug("Averaging market data... from 15 to", self._duration)
+            _LOGGER.debug(f"Averaging market data... from 15 to {self._duration}")
             self._marketdata = average_marketdata(self._marketdata, self._duration)
 
-    async def _fetch_day_ahead(self) -> List[Marketprice]:
+    async def _fetch_day_ahead(self) -> list[Marketprice]:
         """Fetch day-ahead electricity prices (A44)."""
         now = datetime.now(timezone.utc)  # Align to full hour
         start_dt = now.replace(minute=0, second=0, microsecond=0)
@@ -148,9 +147,9 @@ class EntsoeTransparency:
             resp.raise_for_status()
             return await resp.text()
 
-    def _extract_marketdata(self, xml_text) -> List[Marketprice]:
+    def _extract_marketdata(self, xml_text) -> list[Marketprice]:
         """Extract prices (€/MWh → €/kWh) from XML, filling missing positions."""
-        entries: List[Marketprice] = []
+        entries: list[Marketprice] = []
         root = ET.fromstring(xml_text)
         ns = {"ns": "urn:iec62325.351:tc57wg16:451-3:publicationdocument:7:3"}
 
@@ -206,7 +205,7 @@ class EntsoeTransparency:
 
                     if prev_position is not None and position > prev_position + 1:
                         for missing_pos in range(prev_position + 1, position):
-                            logging.debug(
+                            _LOGGER.debug(
                                 f"Filling missing position {missing_pos} using previous price {prev_price_kwh} €/kWh"
                             )
                             entries.append(

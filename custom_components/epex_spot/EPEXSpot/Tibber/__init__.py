@@ -4,8 +4,8 @@ from datetime import datetime
 
 import aiohttp
 
-from ...const import UOM_EUR_PER_KWH, TIBBER_DEMO_TOKEN
 from ...common import Marketprice
+from ...const import TIBBER_DEMO_TOKEN, UOM_EUR_PER_KWH
 
 TIBBER_QUERY = """
 {

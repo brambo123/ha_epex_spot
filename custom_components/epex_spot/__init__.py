@@ -3,10 +3,11 @@
 import asyncio
 import logging
 import random
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
+import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DEVICE_ID, Platform
 from homeassistant.core import (
@@ -17,19 +18,20 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import (
     DeviceEntryType,
     DeviceInfo,
+)
+from homeassistant.helpers.device_registry import (
     async_get as dr_async_get,
 )
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.event import async_track_time_change
+from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
-from homeassistant.helpers.storage import Store
 from homeassistant.util import dt
 
 from .const import (
@@ -92,7 +94,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             await coordinator.source.async_save_cache()
             coordinator.source.update_time()
             coordinator.async_set_updated_data(None)
-        except Exception as err:  # pylint: disable=broad-except
+        except Exception as err:  # noqa: BLE001
             ex = ConfigEntryNotReady()
             ex.__cause__ = err
             raise ex
@@ -208,7 +210,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     try:
         store = Store(hass, 1, f"epex_spot.{entry.entry_id}")
         await store.async_remove()
-    except Exception as err:  # pylint: disable=broad-except
+    except Exception as err:  # noqa: BLE001
         _LOGGER.error(f"Error removing EPEX Spot storage cache: {err}")
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
@@ -279,7 +281,7 @@ class EpexSpotDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             await self.source.fetch()
             self._error_count = 0
             await self.source.async_save_cache()
-        except Exception as err:  # pylint: disable=broad-except
+        except Exception as err:  # noqa: BLE001
             self._error_count += 1
             if self._error_count >= 3:
                 _LOGGER.warning(

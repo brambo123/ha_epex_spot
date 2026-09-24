@@ -1,5 +1,6 @@
 import os
 import sys
+
 import aiohttp
 import pytest
 import time_machine
@@ -7,8 +8,9 @@ import time_machine
 # Dynamic path fix
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
-from custom_components.epex_spot.EPEXSpot import API_REGISTRY
 from custom_components.epex_spot.const import CONF_SOURCE_ENERGYZERO
+from custom_components.epex_spot.EPEXSpot import API_REGISTRY
+
 
 @pytest.mark.asyncio
 @time_machine.travel("2026-07-05 12:00:00 +00:00")  # Freeze time to July 5, 2026
@@ -32,12 +34,10 @@ async def test_energyzero_api_mock(mocker, mock_response):
     get_mock = mocker.patch("aiohttp.ClientSession.get", return_value=resp)
 
     # Test matrix for both supported durations
-    test_matrix = {
-        "nl": 15,
-        "nl": 60
-    }
+    test_matrix = [15, 60]
+    area = 'nl'
 
-    for area, duration in test_matrix.items():
+    for duration in test_matrix:
         async with aiohttp.ClientSession() as session:
             api_class = API_REGISTRY[CONF_SOURCE_ENERGYZERO]
             service = api_class(

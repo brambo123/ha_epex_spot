@@ -1,6 +1,7 @@
-import pytest
 import aiohttp
+import pytest
 from homeassistant.util import dt as dt_util
+
 
 class CentralMockResponse:
     def __init__(self, data, status):
@@ -18,7 +19,6 @@ class CentralMockResponse:
             raise aiohttp.ClientResponseError(
                 request_info=None, history=None, status=self.status, message="HTTP Error"
             )
-        pass
 
     async def __aenter__(self):
         return self

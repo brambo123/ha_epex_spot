@@ -1,13 +1,14 @@
 import os
 import sys
+
 import aiohttp
 import pytest
 import time_machine
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
-from custom_components.epex_spot.EPEXSpot import API_REGISTRY
 from custom_components.epex_spot.const import CONF_SOURCE_JEROEN
+from custom_components.epex_spot.EPEXSpot import API_REGISTRY
 
 
 @pytest.mark.asyncio
@@ -53,7 +54,7 @@ async def test_jeroen_api_mock(mocker, mock_response):
             await service.fetch()
             
             assert get_mock.call_count > 0
-            called_url, called_kwargs = get_mock.call_args
+            called_url, _ = get_mock.call_args
             assert "https://jeroen.nl/api/dynamische-energieprijzen/v2/" in called_url[0]
             
             assert service.marketdata is not None

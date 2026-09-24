@@ -1,13 +1,13 @@
 """Hofer Gruenstrom API."""
 
+import logging
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
-import logging
 
 import aiohttp
-
 from homeassistant.util import dt as dt_util
-from ...common import Marketprice, compress_marketdata
+
+from ...common import Marketprice, average_marketdata
 
 _LOGGER = logging.getLogger(__name__)
 

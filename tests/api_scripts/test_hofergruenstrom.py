@@ -1,5 +1,6 @@
 import os
 import sys
+
 import aiohttp
 import pytest
 import time_machine
@@ -7,8 +8,8 @@ import time_machine
 # Dynamic path fix
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
-from custom_components.epex_spot.EPEXSpot import API_REGISTRY
 from custom_components.epex_spot.const import CONF_SOURCE_HOFER_GRUENSTROM
+from custom_components.epex_spot.EPEXSpot import API_REGISTRY
 
 
 @pytest.mark.asyncio
@@ -65,12 +66,12 @@ async def test_hofer_gruenstrom_api_mock(mocker, mock_response):
             assert get_mock.call_count == 2
             
             # Inspect the first call (Today)
-            call_today_args, call_today_kwargs = get_mock.call_args_list[0]
+            call_today_args, _ = get_mock.call_args_list[0]
             expected_url_today = "https://www.xn--hofer-grnstrom-nsb.at/service/energy-manager/spot-prices?year=2026&month=7&day=5"
             assert call_today_args[0] == expected_url_today
             
             # Inspect the second call (Tomorrow)
-            call_tomorrow_args, call_tomorrow_kwargs = get_mock.call_args_list[1]
+            call_tomorrow_args, _ = get_mock.call_args_list[1]
             expected_url_tomorrow = "https://www.xn--hofer-grnstrom-nsb.at/service/energy-manager/spot-prices?year=2026&month=7&day=6"
             assert call_tomorrow_args[0] == expected_url_tomorrow
             

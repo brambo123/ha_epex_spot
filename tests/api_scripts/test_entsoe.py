@@ -1,5 +1,6 @@
 import os
 import sys
+
 import aiohttp
 import pytest
 import time_machine
@@ -7,8 +8,8 @@ import time_machine
 # Dynamic path fix
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
-from custom_components.epex_spot.EPEXSpot import API_REGISTRY
 from custom_components.epex_spot.const import CONF_SOURCE_ENTSOE
+from custom_components.epex_spot.EPEXSpot import API_REGISTRY
 
 
 @pytest.mark.asyncio

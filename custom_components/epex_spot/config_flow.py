@@ -4,41 +4,29 @@ Used by UI to setup integration.
 """
 
 import logging
-import voluptuous as vol
-from typing import Dict, List, Tuple
 
+import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlowWithReload
 from homeassistant.core import callback
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
     TemplateSelector,
 )
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
+    CONF_BACKUP_ENTRY,
+    CONF_DURATION,
     CONF_MARKET_AREA,
     CONF_SOURCE,
-    CONF_SOURCE_AWATTAR,
-    CONF_SOURCE_ENTSOE,
-    CONF_SOURCE_SMARD_DE,
-    CONF_SOURCE_SMARTENERGY,
-    CONF_SOURCE_TIBBER,
-    CONF_SOURCE_ENERGYFORECAST,
-    CONF_SOURCE_ENERGYCHARTS,
-    CONF_SOURCE_NORDPOOL,
-    CONF_SOURCE_HOFER_GRUENSTROM,
-    CONF_SOURCE_ENERGYZERO,
-    CONF_SOURCE_JEROEN,
     CONF_SURCHARGE_ABS,
     CONF_SURCHARGE_PERC,
-    CONF_TEMPLATE_IMPORT,
-    CONF_TEMPLATE_EXPORT,
     CONF_TAX,
+    CONF_TEMPLATE_EXPORT,
+    CONF_TEMPLATE_IMPORT,
     CONF_TOKEN,
-    CONF_DURATION,
-    CONF_BACKUP_ENTRY,
     CONFIG_VERSION,
     DEFAULT_DURATION,
     DEFAULT_SURCHARGE_ABS,
@@ -69,8 +57,8 @@ async def _async_validate_token(
         )
         await service.fetch()
         return len(service.marketdata) >= 23
-    except Exception as err:  # pylint: disable=broad-except
-        _LOGGER.error(f"Token validation failed for {source}: {err}", exc_info=True)
+    except Exception:  # pylint: disable=broad-except
+        _LOGGER.exception(f"Token validation failed for {source}")
         return False
 
 class EpexSpotConfigFlow(ConfigFlow, domain=DOMAIN):  # type: ignore
@@ -108,7 +96,7 @@ class EpexSpotConfigFlow(ConfigFlow, domain=DOMAIN):  # type: ignore
         )
 
     async def async_step_source(self, user_input=None):
-        errors: Dict[str, str] = {}
+        errors: dict[str, str] = {}
 
         areas, durations, requires_token = getParametersForSource(self._source_name)
 
@@ -191,7 +179,7 @@ class EpexSpotOptionsFlow(OptionsFlowWithReload):
 
     async def async_step_init(self, user_input=None):
         """Manage the options."""
-        errors: Dict[str, str] = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
 
@@ -297,7 +285,7 @@ class EpexSpotOptionsFlow(OptionsFlowWithReload):
 
 def getParametersForSource(
     source_name: str,
-) -> Tuple[List[str], List[int], bool]:
+) -> tuple[list[str], list[int], bool]:
     """
     returns sorted market areas, durations and if given source requires a token
     """
@@ -306,7 +294,7 @@ def getParametersForSource(
 
     api_class = API_REGISTRY[source_name]
 
-    areas = sorted(list(api_class.MARKET_AREAS))
+    areas = sorted(api_class.MARKET_AREAS)
     durations = api_class.SUPPORTED_DURATIONS
     requires_token = getattr(api_class, "REQUIRES_TOKEN", False)
 
