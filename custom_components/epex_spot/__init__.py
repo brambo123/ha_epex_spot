@@ -6,6 +6,7 @@ import random
 from collections.abc import Callable
 from typing import Any
 
+import aiohttp
 import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
@@ -80,25 +81,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await source.async_load_cache()
     source.update_time()
-    if not source.has_data_today:
-        await source.async_load_backup_cache()
-        source.update_time()
 
     coordinator = EpexSpotDataUpdateCoordinator(hass, source=source)
 
-    if source.has_data_today:
-        coordinator.async_set_updated_data(None)
-    else:
+    if not coordinator.source.has_data_today:
         try:
             await coordinator.source.fetch()
             await coordinator.source.async_save_cache()
             coordinator.source.update_time()
-            coordinator.async_set_updated_data(None)
+            if not coordinator.source.has_data_today:
+                await coordinator.source.async_load_backup_cache()
+
+        except (aiohttp.ClientError, TimeoutError, ValueError):
+            await coordinator.source.async_load_backup_cache()
+
         except Exception as err:  # noqa: BLE001
             ex = ConfigEntryNotReady()
             ex.__cause__ = err
             raise ex
 
+    coordinator.source.update_time()
+    coordinator.async_set_updated_data(None)
+    
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
