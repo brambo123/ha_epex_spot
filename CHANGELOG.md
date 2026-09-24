@@ -7,7 +7,7 @@ All notable changes to the EPEX Spot integration will be documented in this file
 
 ---
 
-## [5.0.1] [Unpublished]
+## [5.0.1]
 
 ### 📢 Important change
 * The **Tibber API** now retrieves the bare market price, but still uses the tax information to calculate the total price.
