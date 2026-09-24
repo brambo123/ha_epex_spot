@@ -1,4 +1,4 @@
-"""SourceShell"""
+"""SourceShell""" # noqa: N999
 
 import logging
 from datetime import timedelta

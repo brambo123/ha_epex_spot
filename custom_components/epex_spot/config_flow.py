@@ -7,7 +7,7 @@ import logging
 
 import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlowWithReload
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     SelectSelector,
@@ -57,7 +57,7 @@ async def _async_validate_token(
         )
         await service.fetch()
         return len(service.marketdata) >= 23
-    except Exception:  # pylint: disable=broad-except
+    except Exception:
         _LOGGER.exception(f"Token validation failed for {source}")
         return False
 
