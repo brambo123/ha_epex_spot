@@ -1,35 +1,27 @@
 """Hofer Gruenstrom API."""
 
+import logging
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
-import logging
 
 import aiohttp
+from homeassistant.util import dt as dt_util
 
-from ...common import Marketprice, compress_marketdata
-from ...const import TIMEZONE_HOFER_GRUENSTROM
+from ...common import Marketprice, average_marketdata
 
 _LOGGER = logging.getLogger(__name__)
-
-
-def _set_tz_on_date(date: datetime):
-    """Set timezone on a date object."""
-    timezone = ZoneInfo(TIMEZONE_HOFER_GRUENSTROM)
-
-    if date.tzinfo is None:
-        return date.replace(tzinfo=timezone)
-
-    return date.astimezone(timezone)
 
 
 class HoferGruenstrom:
     URL = "https://www.xn--hofer-grnstrom-nsb.at/service/energy-manager/spot-prices"
 
     MARKET_AREAS = ("at",)
+    TIMEZONE_HOFER_GRUENSTROM = ZoneInfo("Europe/Vienna")
     SUPPORTED_DURATIONS = (
         15,
         60,
     )
+    REQUIRES_TOKEN = False
 
     def __init__(self, market_area: str, duration: int, session: aiohttp.ClientSession):
         if market_area not in self.MARKET_AREAS:
@@ -65,7 +57,7 @@ class HoferGruenstrom:
 
     async def fetch(self):
         # get todays and tomorrows date components
-        today = datetime.now(ZoneInfo(TIMEZONE_HOFER_GRUENSTROM))
+        today = dt_util.now().date()
         tomorrow = today + timedelta(days=1)
         dates = [today, tomorrow]
 
@@ -83,11 +75,10 @@ class HoferGruenstrom:
                 _LOGGER.error("No data found in response for %s", date.isoformat())
                 continue
 
-            duration = self._get_duration_from_data(data)
             # extract market data
-            complete_marketdata = self._extract_marketdata(data, duration)
-            if duration < self.duration:
-                complete_marketdata = compress_marketdata(
+            complete_marketdata = self._extract_marketdata(data)
+            if complete_marketdata[0].duration < self.duration:
+                complete_marketdata = average_marketdata(
                     complete_marketdata, self.duration
                 )
 
@@ -95,13 +86,23 @@ class HoferGruenstrom:
 
         self._marketdata = marketdata
 
-    def _extract_marketdata(self, data, duration):
+    def _extract_marketdata(self, data):
         entries: list[Marketprice] = []
+        last_dt = None
+        use_fold = 0
         for entry in data:
+            dt = datetime.fromisoformat(entry["from"])
+            if last_dt and dt < last_dt:
+                use_fold = 1
+            last_dt = dt
+
+            start_time = dt.replace(tzinfo=self.TIMEZONE_HOFER_GRUENSTROM, fold=use_fold)
+            end_time = datetime.fromisoformat(entry["to"]).replace(tzinfo=self.TIMEZONE_HOFER_GRUENSTROM, fold=use_fold)
+
             entries.append(
                 Marketprice(
-                    start_time=_set_tz_on_date(datetime.fromisoformat(entry["from"])),
-                    duration=duration,
+                    start_time=start_time,
+                    end_time=end_time,
                     price=round(float(entry["price"]) / 100, 6),
                 )
             )
@@ -121,12 +122,3 @@ class HoferGruenstrom:
                 )
                 return None
             return await response.json()
-
-    def _get_duration_from_data(self, data):
-        if not data:
-            _LOGGER.error("Empty data received in _get_duration_from_data")
-            raise ValueError("Cannot determine duration from empty data")
-        start_date: datetime = datetime.fromisoformat(data[0]["from"])
-        end_date: datetime = datetime.fromisoformat(data[0]["to"])
-        duration: timedelta = end_date - start_date
-        return int(duration.total_seconds() / 60)

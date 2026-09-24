@@ -1,10 +1,11 @@
 """Jeroen.nl API."""
 
-from datetime import timedelta
-import aiohttp
 import logging
+from datetime import timedelta
 
+import aiohttp
 from homeassistant.util import dt as dt_util
+
 from ...common import Marketprice, average_marketdata
 
 _LOGGER = logging.getLogger(__name__)
@@ -15,6 +16,7 @@ class Jeroen:
 
     MARKET_AREAS = ("nl",)
     SUPPORTED_DURATIONS = (15, 60)
+    REQUIRES_TOKEN = True
 
     def __init__(
         self,
@@ -105,8 +107,11 @@ class Jeroen:
                                 price=round(price, 6)
                             )
                         )
-        except Exception as e:
-            _LOGGER.error(f"Error fetching Jeroen.nl data for period {period}: {e}")
+
+        except (aiohttp.ClientError, TimeoutError) as err:
+            _LOGGER.error(f"Error fetching Jeroen.nl data: {err}")
+        except (KeyError, ValueError, TypeError) as err:
+            _LOGGER.error(f"Invalid data format received from Jeroen.nl: {err}")
 
         if not raw_quarter_data:
             return

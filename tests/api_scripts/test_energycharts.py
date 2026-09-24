@@ -1,5 +1,6 @@
 import os
 import sys
+
 import aiohttp
 import pytest
 import time_machine
@@ -7,7 +8,8 @@ import time_machine
 # Dynamic path fix
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
-from custom_components.epex_spot.EPEXSpot import EnergyCharts
+from custom_components.epex_spot.const import CONF_SOURCE_ENERGYCHARTS
+from custom_components.epex_spot.EPEXSpot import API_REGISTRY
 
 
 @pytest.mark.asyncio
@@ -29,7 +31,8 @@ async def test_energycharts_api_mock(mocker, mock_response):
     
     for area, duration in test_matrix.items():
         async with aiohttp.ClientSession() as session:
-            service = EnergyCharts.EnergyCharts(
+            api_class = API_REGISTRY[CONF_SOURCE_ENERGYCHARTS]
+            service = api_class(
                 market_area=area, duration=duration, session=session
             )
             

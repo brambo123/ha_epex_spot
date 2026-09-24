@@ -36,6 +36,20 @@ get_lowest_price_interval:
       example: 01:00:00
       selector:
         duration:
+    price_type:
+      required: false
+      default: market_price
+      selector:
+        select:
+          options:
+            - label: Market Price
+              value: market_price
+            - label: Total Price
+              value: total_price
+            - label: Import Price
+              value: import_price
+            - label: Export Price
+              value: export_price
 get_highest_price_interval:
   fields:
     device_id:
@@ -74,6 +88,20 @@ get_highest_price_interval:
       example: 01:00:00
       selector:
         duration:
+    price_type:
+      required: false
+      default: market_price
+      selector:
+        select:
+          options:
+            - label: Market Price
+              value: market_price
+            - label: Total Price
+              value: total_price
+            - label: Import Price
+              value: import_price
+            - label: Export Price
+              value: export_price
 fetch_data:
   fields:
     device_id:

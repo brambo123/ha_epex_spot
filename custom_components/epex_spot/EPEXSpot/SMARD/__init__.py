@@ -1,15 +1,13 @@
 """SMARD.de API."""
 
-from datetime import datetime, timezone
 import logging
-from typing import List
+from datetime import datetime, timezone
 
 import aiohttp
-
 from homeassistant.util import dt as dt_util
 
-from ...const import UOM_EUR_PER_KWH
 from ...common import Marketprice
+from ...const import UOM_EUR_PER_KWH
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,8 +33,9 @@ MARKET_AREA_MAP = {
 class SMARD:
     URL = "https://www.smard.de/app/chart_data"
 
-    MARKET_AREAS = MARKET_AREA_MAP.keys()
+    MARKET_AREAS = tuple(MARKET_AREA_MAP.keys())
     SUPPORTED_DURATIONS = (15, 60)
+    REQUIRES_TOKEN = False
 
     def __init__(self, market_area: str, duration: int, session: aiohttp.ClientSession):
         self._session = session
@@ -62,7 +61,7 @@ class SMARD:
         return "EUR"
 
     @property
-    def marketdata(self) -> List[Marketprice]:
+    def marketdata(self) -> list[Marketprice]:
         return self._marketdata
 
     async def fetch(self):
@@ -78,7 +77,7 @@ class SMARD:
         start_of_today = int(dt_util.start_of_local_day().timestamp() * 1000)
         latest_timestamp = j["timestamps"][-1:] if j["timestamps"][-1] <= start_of_today else j["timestamps"][-2:]
 
-        entries: List[Marketprice] = []
+        entries: list[Marketprice] = []
 
         for lt in latest_timestamp:
             # get available data
@@ -99,7 +98,7 @@ class SMARD:
                         )
                     )
 
-        if entries[-1].start_time.date() == datetime.today().date():
+        if entries[-1].start_time.date() == dt_util.now().date():
             # latest data is on the same day, only return 48 entries
             # that's yesterday and today
             self._marketdata = entries[
@@ -114,7 +113,7 @@ class SMARD:
 
     async def _fetch_data(self, timestamp, market, resolution):
         # get available data
-        url = f"{self.URL}/{market}/DE/{market}_DE_{resolution}_{timestamp}.json"  # noqa: E501
+        url = f"{self.URL}/{market}/DE/{market}_DE_{resolution}_{timestamp}.json"
         async with self._session.get(url) as resp:
             resp.raise_for_status()
             return await resp.json()

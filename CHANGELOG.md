@@ -2,7 +2,24 @@
 
 All notable changes to the EPEX Spot integration will be documented in this file.
 
+> [!IMPORTANT]  
+> From version 5.0.1 onwards, Tibber's price information is split into market price and total price. Please ensure you use the correct sensor.
+
 ---
+
+## [5.0.1] [Unpublished]
+
+### 📢 Important change
+* The **Tibber API** now retrieves the bare market price, but still uses the tax information to calculate the total price.
+
+### 🛠️ Improvements & Optimizations
+* **Internal restructuring** - APIs are now loaded more dynamically, making it easier to add new ones later.
+* **API token changeable** - Configured API tokens can now be modified; we also test the token before saving.
+* **ENTSO-E** - The API may sometimes return duplicate time series; read only the first one.
+* **smartENERGY** - Fix 60min price calculations.
+* **Hofer Grünstrom** - Fix Daylight Saving Time handling and 60min price calculations.
+* **Nordpool** - Accept only final prices for EUR (Nord Pool provides preliminary price information).
+* **Fallback support** - Use data from failback source after 16:00 instead of after 21:00.
 
 ## [5.0.0] - 2026-07-06
 

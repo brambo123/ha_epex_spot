@@ -1,65 +1,47 @@
-"""SourceShell"""
+"""SourceShell""" # noqa: N999
 
-from datetime import timedelta
 import logging
+from datetime import timedelta
 from typing import Any
 
 import aiohttp
-
 from homeassistant.components import persistent_notification
-from homeassistant.helpers.storage import Store
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.util import dt
 from homeassistant.helpers import template as template_helper
-from .common import Marketprice
+from homeassistant.helpers.storage import Store
+from homeassistant.util import dt
 
 from custom_components.epex_spot.const import (
-    DOMAIN,
+    CONF_BACKUP_ENTRY,
     CONF_DURATION,
     CONF_EARLIEST_START_POST,
     CONF_EARLIEST_START_TIME,
     CONF_LATEST_END_POST,
     CONF_LATEST_END_TIME,
     CONF_MARKET_AREA,
+    CONF_PRICE_TYPE,
     CONF_SOURCE,
-    CONF_SOURCE_AWATTAR,
-    CONF_SOURCE_ENERGYFORECAST,
-    CONF_SOURCE_ENTSOE,
-    CONF_SOURCE_ENERGYCHARTS,
-    CONF_SOURCE_SMARD_DE,
-    CONF_SOURCE_SMARTENERGY,
-    CONF_SOURCE_NORDPOOL,
-    CONF_SOURCE_TIBBER,
-    CONF_SOURCE_HOFER_GRUENSTROM,
-    CONF_SOURCE_ENERGYZERO,
-    CONF_SOURCE_JEROEN,
     CONF_SURCHARGE_ABS,
     CONF_SURCHARGE_PERC,
-    CONF_TEMPLATE_IMPORT,
-    CONF_TEMPLATE_EXPORT,
     CONF_TAX,
+    CONF_TEMPLATE_EXPORT,
+    CONF_TEMPLATE_IMPORT,
     CONF_TOKEN,
-    CONF_BACKUP_ENTRY,
     DEFAULT_DURATION,
     DEFAULT_SURCHARGE_ABS,
     DEFAULT_SURCHARGE_PERC,
     DEFAULT_TAX,
+    DOMAIN,
     EMPTY_EXTREME_PRICE_INTERVAL_RESP,
 )
-from custom_components.epex_spot.EPEXSpot import (
-    SMARD,
-    Awattar,
-    Energyforecast,
-    Tibber,
-    smartENERGY,
-    ENTSOE,
-    EnergyCharts,
-    Nordpool,
-    HoferGruenstrom,
-    EnergyZero,
-    Jeroen,
+from custom_components.epex_spot.EPEXSpot import API_REGISTRY
+
+from .common import Marketprice
+from .extreme_price_interval import (
+    calc_interval_average_price,
+    calculate_search_window,
+    find_extreme_interval,
 )
-from .extreme_price_interval import find_extreme_price_interval, get_start_times
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,79 +58,24 @@ class SourceShell:
         self._has_data_tomorrow = False
         self._store = Store(self._hass, 1, f"epex_spot.{self._config_entry.entry_id}")
 
-        # create source object
-        if config_entry.data[CONF_SOURCE] == CONF_SOURCE_AWATTAR:
-            self._source = Awattar.Awattar(
-                market_area=config_entry.data[CONF_MARKET_AREA],
-                duration=int(config_entry.options.get(CONF_DURATION, DEFAULT_DURATION)),
-                session=session,
-            )
-        elif config_entry.data[CONF_SOURCE] == CONF_SOURCE_SMARD_DE:
-            self._source = SMARD.SMARD(
-                market_area=config_entry.data[CONF_MARKET_AREA],
-                duration=int(config_entry.options.get(CONF_DURATION, DEFAULT_DURATION)),
-                session=session,
-            )
-        elif config_entry.data[CONF_SOURCE] == CONF_SOURCE_SMARTENERGY:
-            self._source = smartENERGY.smartENERGY(
-                market_area=config_entry.data[CONF_MARKET_AREA],
-                duration=int(config_entry.options.get(CONF_DURATION, DEFAULT_DURATION)),
-                session=session,
-            )
-        elif config_entry.data[CONF_SOURCE] == CONF_SOURCE_TIBBER:
-            self._source = Tibber.Tibber(
-                market_area=config_entry.data[CONF_MARKET_AREA],
-                duration=int(config_entry.options.get(CONF_DURATION, DEFAULT_DURATION)),
-                token=self._config_entry.data[CONF_TOKEN],
-                session=session,
-            )
-        elif config_entry.data[CONF_SOURCE] == CONF_SOURCE_ENERGYFORECAST:
-            self._source = Energyforecast.Energyforecast(
-                market_area=config_entry.data[CONF_MARKET_AREA],
-                duration=int(config_entry.options.get(CONF_DURATION, DEFAULT_DURATION)),
-                token=self._config_entry.data[CONF_TOKEN],
-                session=session,
-            )
-        elif config_entry.data[CONF_SOURCE] == CONF_SOURCE_ENTSOE:
-            self._source = ENTSOE.EntsoeTransparency(
-                market_area=config_entry.data[CONF_MARKET_AREA],
-                duration=int(config_entry.options.get(CONF_DURATION, DEFAULT_DURATION)),
-                token=self._config_entry.data[CONF_TOKEN],
-                session=session,
-            )
-        elif config_entry.data[CONF_SOURCE] == CONF_SOURCE_ENERGYCHARTS:
-            self._source = EnergyCharts.EnergyCharts(
-                market_area=config_entry.data[CONF_MARKET_AREA],
-                duration=int(config_entry.options.get(CONF_DURATION, DEFAULT_DURATION)),
-                session=session,
-            )
-        elif config_entry.data[CONF_SOURCE] == CONF_SOURCE_NORDPOOL:
-            self._source = Nordpool.Nordpool(
-                market_area=config_entry.data[CONF_MARKET_AREA],
-                duration=int(config_entry.options.get(CONF_DURATION, DEFAULT_DURATION)),
-                session=session,
-            )
-        elif config_entry.data[CONF_SOURCE] == CONF_SOURCE_HOFER_GRUENSTROM:
-            self._source = HoferGruenstrom.HoferGruenstrom(
-                market_area=config_entry.data[CONF_MARKET_AREA],
-                duration=int(config_entry.options.get(CONF_DURATION, DEFAULT_DURATION)),
-                session=session,
-            )
-        elif config_entry.data[CONF_SOURCE] == CONF_SOURCE_ENERGYZERO:
-            self._source = EnergyZero.EnergyZero(
-                market_area=config_entry.data[CONF_MARKET_AREA],
-                duration=int(config_entry.options.get(CONF_DURATION, DEFAULT_DURATION)),
-                session=session,
-            )
-        elif config_entry.data[CONF_SOURCE] == CONF_SOURCE_JEROEN:
-            self._source = Jeroen.Jeroen(
-                market_area=config_entry.data[CONF_MARKET_AREA],
-                duration=int(config_entry.options.get(CONF_DURATION, DEFAULT_DURATION)),
-                token=self._config_entry.data[CONF_TOKEN],
-                session=session,
-            )
-        else:
-            raise ValueError(f"Unsupported source: {config_entry.data[CONF_SOURCE]}")
+        # Find correct source object
+        source_name = config_entry.data[CONF_SOURCE]
+
+        if source_name not in API_REGISTRY:
+            raise ValueError(f"Unsupported source: {source_name}")
+
+        # Create source object        
+        api_class = API_REGISTRY[source_name]
+
+        kwargs = {
+            "market_area": config_entry.data[CONF_MARKET_AREA],
+            "duration": int(config_entry.options.get(CONF_DURATION, DEFAULT_DURATION)),
+            "session": session
+        }
+        if getattr(api_class, "REQUIRES_TOKEN", False):
+            kwargs["token"] = self._config_entry.data[CONF_TOKEN]
+
+        self._source = api_class(**kwargs)
 
     @property
     def unique_id(self):
@@ -218,8 +145,14 @@ class SourceShell:
             self._marketdata_now = None
             self._sorted_marketdata_today = []
 
-        # get list of entries for today
+        # cleanup yesterday's marketdata
         current_date = now.date()
+        self._source._marketdata = [
+            e for e in self._source._marketdata 
+            if dt.as_local(e.start_time).date() >= current_date
+        ]
+
+        # get list of entries for today
         sorted_marketdata_today = filter(
             lambda e: dt.as_local(e.start_time).date() == current_date,
             self.marketdata,
@@ -238,11 +171,13 @@ class SourceShell:
         )
         self._has_data_tomorrow = len(list(marketdata_tomorrow)) >= self.minimal_daily_points
 
-    def to_total_price(self, market_price_per_kwh):
-        total_price = market_price_per_kwh
+    def to_total_price(self, marketprice: Marketprice) -> float:
+        total_price = marketprice.market_price_per_kwh
 
-        # Standard calculation for other cases
-        if "Tibber API" not in self.name:
+        if "surcharge" in marketprice.attributes:
+            # Retrieve total surcharge from attributes
+            total_price += marketprice.attributes["surcharge"]
+        else:
             # Retrieve tax and surcharge values from config
             surcharge_abs = self._config_entry.options.get(
                 CONF_SURCHARGE_ABS, DEFAULT_SURCHARGE_ABS
@@ -259,77 +194,116 @@ class SourceShell:
 
         return round(total_price, 6)
         
-    def _render_custom_template(self, template_str: str, market_price: float, dt_value) -> float:
+    def _render_custom_template(self, template_str: str, marketprice: Marketprice) -> float:
         """Helper to render a custom Jinja2 template with price and datetime context."""
         if not template_str or template_str.strip() == "":
-            return market_price
+            return marketprice.market_price_per_kwh
 
         try:
             # Create a Home Assistant Template object
             compiled_template = template_helper.Template(template_str, self._hass)
-            
+
             # Context variables available to the end-user
             variables = {
-                "market_price": market_price,
-                "now": lambda: dt.as_local(dt_value),
+                "market_price": marketprice.market_price_per_kwh,
+                "now": lambda: dt.as_local(marketprice.start_time),
+                "attrs": marketprice.attributes
             }
-            
+
             # Render and convert to float
             rendered_value = compiled_template.async_render(variables, parse_result=True)
             return float(rendered_value)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             _LOGGER.error("Error rendering price template '%s': %s. Falling back to market price.", template_str, e)
-            return market_price
+            return marketprice.market_price_per_kwh
 
-    def get_import_price(self, market_price_per_kwh: float, dt_value=None) -> float:
+    def get_import_price(self, marketprice: Marketprice) -> float:
         """Calculate custom import price based on user template or fallback to standard calculation."""
         template_str = self._config_entry.options.get(CONF_TEMPLATE_IMPORT, "")
-        
+
         # If user provided a custom template, use it
         if template_str and template_str.strip() != "":
-            target_dt = dt_value if dt_value else dt.now()
-            return round(self._render_custom_template(template_str, market_price_per_kwh, target_dt), 6)
-            
-        # Fallback to the original built-in calculation if template is empty
-        return self.to_total_price(market_price_per_kwh)
+            return round(self._render_custom_template(template_str, marketprice), 6)
 
-    def get_export_price(self, market_price_per_kwh: float, dt_value=None) -> float:
+        # Fallback to the original built-in calculation if template is empty
+        return self.to_total_price(marketprice)
+
+    def get_export_price(self, marketprice: Marketprice) -> float:
         """Calculate custom export price based on user template or fallback to standard calculation."""
         template_str = self._config_entry.options.get(CONF_TEMPLATE_EXPORT, "")
-        
+
         # If user provided a custom template, use it
         if template_str and template_str.strip() != "":
-            target_dt = dt_value if dt_value else dt.now()
-            return round(self._render_custom_template(template_str, market_price_per_kwh, target_dt), 6)
-            
+            return round(self._render_custom_template(template_str, marketprice), 6)
+
         # Fallback to the original built-in calculation if template is empty
-        return self.to_total_price(market_price_per_kwh)
+        return self.to_total_price(marketprice)
 
     def find_extreme_price_interval(self, call_data, cmp):
         duration: timedelta = call_data[CONF_DURATION]
+        price_type = call_data.get(CONF_PRICE_TYPE, "market_price")
 
-        start_times = get_start_times(
-            marketdata=self.marketdata,
+        earliest_start, latest_end = calculate_search_window(
             earliest_start_time=call_data.get(CONF_EARLIEST_START_TIME),
             earliest_start_post=call_data.get(CONF_EARLIEST_START_POST),
             latest_end_time=call_data.get(CONF_LATEST_END_TIME),
             latest_end_post=call_data.get(CONF_LATEST_END_POST),
             latest_market_datetime=self.marketdata[-1].end_time,
-            duration=duration,
         )
 
-        result = find_extreme_price_interval(
-            self.marketdata, start_times, duration, cmp
+        if earliest_start is None or latest_end is None:
+            return EMPTY_EXTREME_PRICE_INTERVAL_RESP
+
+        # 1. Filter market data to the search window (overlapping segments)
+        sub_marketdata = [
+            mp for mp in self.marketdata
+            if mp.end_time > earliest_start and mp.start_time < latest_end
+        ]
+
+        if not sub_marketdata:
+            return EMPTY_EXTREME_PRICE_INTERVAL_RESP
+
+        # 2. Determine price mapping function
+        if price_type == "market_price":
+            price_fn = lambda mp: mp.market_price_per_kwh
+        elif price_type == "total_price":
+            price_fn = self.to_total_price
+        elif price_type == "import_price":
+            price_fn = self.get_import_price
+        elif price_type == "export_price":
+            price_fn = self.get_export_price
+        else:
+            raise ValueError(f"Unknown price type: {price_type}")
+
+        # 3. Map prices over the filtered moments
+        mapped_marketdata = []
+        for mp in sub_marketdata:
+            mapped_price = price_fn(mp)
+            mapped_mp = Marketprice(
+                start_time=mp.start_time,
+                duration=int((mp.end_time - mp.start_time).total_seconds() / 60),
+                price=mapped_price,
+            )
+            mapped_marketdata.append(mapped_mp)
+
+        # 4. Find extreme price interval using the mapped marketdata
+        result = find_extreme_interval(
+            mapped_marketdata, earliest_start, latest_end, duration, cmp
         )
 
         if result is None:
             return EMPTY_EXTREME_PRICE_INTERVAL_RESP
 
+        # 6. Calculate both average market price and average target price for the chosen interval.
+        best_start = dt.as_utc(result["start"])
+        avg_market_price = calc_interval_average_price(sub_marketdata, best_start, duration)
+        avg_mapped_price = result["price"]
+
         return {
             "start": result["start"],
-            "end": result["start"] + duration,
-            "market_price_per_kwh": round(result["market_price_per_hour"], 6),
-            "total_price_per_kwh": self.get_import_price(result["market_price_per_hour"], result["start"]),
+            "end": result["end"],
+            "market_price_per_kwh": round(avg_market_price, 6) if avg_market_price is not None else None,
+            "total_price_per_kwh": round(avg_mapped_price, 6)
         }
 
     async def async_load_cache(self) -> None:
@@ -351,7 +325,7 @@ class SourceShell:
                         Marketprice.from_dict(e) for e in cached_data["marketdata"]
                     ]
                     self.update_time()
-        except Exception as err:  # pylint: disable=broad-except
+        except (OSError, ValueError, TypeError) as err:
             _LOGGER.warning(f"Error loading EPEX Spot storage cache: {err}")
 
     async def async_save_cache(self) -> None:
@@ -362,7 +336,7 @@ class SourceShell:
                     "duration": self.duration,
                     "marketdata": serializable
                 })
-        except Exception as err:  # pylint: disable=broad-except
+        except (OSError, ValueError, TypeError) as err:
             _LOGGER.warning(f"Error saving EPEX Spot storage cache: {err}")
 
     async def async_load_backup_cache(self) -> None:
@@ -398,7 +372,7 @@ class SourceShell:
                             self.trigger_backup_notification("backup_fallback")
                             return
 
-            except Exception as err:  # pylint: disable=broad-except
+            except (OSError, ValueError, TypeError) as err:
                 _LOGGER.error(f"Failed to read backup entry cache: {err}")
 
             _LOGGER.error(f"No live data and no valid backup data available for {self.name}")

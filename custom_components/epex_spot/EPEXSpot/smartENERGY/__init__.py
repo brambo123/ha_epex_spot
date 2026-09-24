@@ -1,11 +1,11 @@
 """smartENERGY API."""
 
-from datetime import datetime
 import logging
+from datetime import datetime
 
 import aiohttp
 
-from ...common import Marketprice, compress_marketdata
+from ...common import Marketprice, average_marketdata
 from ...const import CT_PER_KWH
 
 _LOGGER = logging.getLogger(__name__)
@@ -16,6 +16,7 @@ class smartENERGY:
 
     MARKET_AREAS = ("at",)
     SUPPORTED_DURATIONS = (15, 60)
+    REQUIRES_TOKEN = False
 
     def __init__(self, market_area, duration: int, session: aiohttp.ClientSession):
         self._session = session
@@ -49,9 +50,9 @@ class smartENERGY:
         assert data["unit"].lower() == CT_PER_KWH.lower()
         self._marketdata = self._extract_marketdata(data["data"], duration)
 
-        # compress data if required
+        # average data if required
         if duration < self._duration:
-            self._marketdata = compress_marketdata(self.marketdata, self._duration)
+            self._marketdata = average_marketdata(self.marketdata, self._duration)
 
     async def _fetch_data(self, url):
         async with self._session.get(url) as resp:

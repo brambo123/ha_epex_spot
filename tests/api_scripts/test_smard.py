@@ -1,5 +1,6 @@
 import os
 import sys
+
 import aiohttp
 import pytest
 import time_machine
@@ -7,7 +8,8 @@ import time_machine
 # Dynamic path fix
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
-from custom_components.epex_spot.EPEXSpot import SMARD
+from custom_components.epex_spot.const import CONF_SOURCE_SMARD_DE
+from custom_components.epex_spot.EPEXSpot import API_REGISTRY
 
 
 @pytest.mark.asyncio
@@ -31,7 +33,8 @@ async def test_smard_api_single_request_needed(mocker, mock_response):
     get_mock = mocker.patch("aiohttp.ClientSession.get", side_effect=[resp_index, resp_data])
 
     async with aiohttp.ClientSession() as session:
-        service = SMARD.SMARD(market_area="DE-LU", duration=60, session=session)
+        api_class = API_REGISTRY[CONF_SOURCE_SMARD_DE]
+        service = api_class(market_area="DE-LU", duration=60, session=session)
         await service.fetch()
         
         # If your optimized logic is applied, this should only be 2 calls in total:
@@ -61,7 +64,8 @@ async def test_smard_api_two_requests_needed(mocker, mock_response):
     get_mock = mocker.patch("aiohttp.ClientSession.get", side_effect=[resp_index, resp_old, resp_new])
 
     async with aiohttp.ClientSession() as session:
-        service = SMARD.SMARD(market_area="NL", duration=15, session=session)
+        api_class = API_REGISTRY[CONF_SOURCE_SMARD_DE]
+        service = api_class(market_area="NL", duration=15, session=session)
         await service.fetch()
         
         # Here it should call the index + 2 data files = 3 calls

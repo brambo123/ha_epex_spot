@@ -1,9 +1,10 @@
 """Nordpool API Client."""
 
-from datetime import datetime, date, timedelta
 import logging
+from datetime import date, datetime, timedelta
+
 import aiohttp
-from typing import List
+from homeassistant.util import dt as dt_util
 
 from ...common import Marketprice
 
@@ -20,8 +21,8 @@ class Nordpool:
     URL = "https://dataportal-api.nordpoolgroup.com/api/DayAheadPriceIndices"
 
     MARKET_AREAS = BIDDING_ZONES
-
     SUPPORTED_DURATIONS = (15, 30, 60)
+    REQUIRES_TOKEN = False
 
     def __init__(self, market_area: str, duration: int, session: aiohttp.ClientSession):
         if market_area not in self.MARKET_AREAS:
@@ -33,7 +34,7 @@ class Nordpool:
         self._session = session
         self._market_area = market_area
         self._duration = duration
-        self._marketdata: List[Marketprice] = []
+        self._marketdata: list[Marketprice] = []
 
     @property
     def name(self):
@@ -57,19 +58,22 @@ class Nordpool:
 
     async def fetch(self):
         try:
-            today = date.today()
+            today = dt_util.now().date()
             json_data = await self._fetch_data(fetch_date=today)
             marketdata = self._extract_marketdata(json_data)
-        except Exception as err:
-            _LOGGER.debug(f"Unexpected error fetching today data: {err}")
-            raise
+        except (aiohttp.ClientError, TimeoutError) as err:
+            _LOGGER.error(f"Error fetching today data from Nordpool: {err}")
+        except (KeyError, ValueError, TypeError) as err:
+            _LOGGER.error(f"Invalid data format received from Nordpool: {err}")
 
         try:
             tomorrow = today + timedelta(days=1)
             json_data = await self._fetch_data(fetch_date=tomorrow)
             marketdata.extend(self._extract_marketdata(json_data))
-        except Exception as err:
-            _LOGGER.debug(f"Unexpected error fetching tomorrow data: {err}")
+        except (aiohttp.ClientError, TimeoutError) as err:
+            _LOGGER.error(f"Error fetching tomorrow data from Nordpool: {err}")
+        except (KeyError, ValueError, TypeError) as err:
+            _LOGGER.error(f"Invalid data format received from Nordpool: {err}")
 
         self._marketdata = marketdata
 
@@ -94,9 +98,12 @@ class Nordpool:
     #
     def _extract_marketdata(
             self, data
-    ) -> List[Marketprice]:
-        extract: List[Marketprice] = []
+    ) -> list[Marketprice]:
+        extract: list[Marketprice] = []
 
+        assert 'areaStates' not in data or data['currency'] != 'EUR' or data['areaStates'][0]['state'] == 'Final', (
+            'Price received is not yet final.'
+        )
         entries = data.get("multiIndexEntries", [])
         for entry in entries:
             entry_per_area = entry.get("entryPerArea", {})
@@ -105,8 +112,14 @@ class Nordpool:
 
             start_utc = datetime.fromisoformat(entry['deliveryStart'])
             end_utc = datetime.fromisoformat(entry['deliveryEnd'])
-            duration = int((end_utc - start_utc).total_seconds() / 60)
             price = (entry_per_area[self._market_area]) / 1000
-            extract.append(Marketprice(start_time=start_utc, duration=duration, price=round(price, 6)))
+
+            extract.append(
+                Marketprice(
+                    start_time=start_utc,
+                    end_time=end_utc,
+                    price=round(price, 6),
+                )
+            )
 
         return extract

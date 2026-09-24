@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
-from typing import List
 
 from homeassistant.util import dt
+
 from .const import UOM_EUR_PER_KWH
 
 
@@ -11,17 +11,26 @@ class Marketprice:
     def __init__(
         self,
         start_time: datetime,
-        duration: int,
         price: float,
-        unit: str = UOM_EUR_PER_KWH,
+        duration: int | None = None,
+        end_time: datetime | None = None,
+        unit: str | None = UOM_EUR_PER_KWH,
+        attributes: dict | None = None,
     ):
         self._start_time = start_time
-        self._end_time = self._start_time + timedelta(minutes=duration)
         self._market_price_per_kwh = price
         self._unit = unit
+        self._attributes = attributes or {}
+
+        if end_time is not None:
+            self._end_time = end_time
+        elif duration is not None:
+            self._end_time = self._start_time + timedelta(minutes=duration)
+        else:
+            raise ValueError("Either 'duration' or 'end_time' must be provided.")
 
     def __repr__(self):
-        return f"{self.__class__.__name__}(start: {self._start_time.isoformat()}, end: {self._end_time.isoformat()}, marketprice: {self._market_price_per_kwh} {self._unit})"  # noqa: E501
+        return f"{self.__class__.__name__}(start: {self._start_time.isoformat()}, end: {self._end_time.isoformat()}, marketprice: {self._market_price_per_kwh} {self._unit}), attributes: {self._attributes})"
 
     @property
     def start_time(self):
@@ -31,12 +40,25 @@ class Marketprice:
     def end_time(self):
         return self._end_time
 
+    @property
+    def duration(self) -> int:
+        delta = self._end_time - self._start_time
+        return int(delta.total_seconds() / 60)
+
     def set_end_time(self, end_time):
         self._end_time = end_time
 
     @property
     def market_price_per_kwh(self):
         return self._market_price_per_kwh
+
+    @property
+    def unit(self):
+        return self._unit
+
+    @property
+    def attributes(self) -> dict:
+        return self._attributes
 
     def to_dict(self) -> dict:
         """Convert Marketprice to a serializable dictionary."""
@@ -45,6 +67,7 @@ class Marketprice:
             "end_time": self._end_time.isoformat(),
             "price": self._market_price_per_kwh,
             "unit": self._unit,
+            "attributes": self._attributes,
         }
 
     @classmethod
@@ -52,18 +75,18 @@ class Marketprice:
         """Create a Marketprice instance from a dictionary."""
         start_time = dt.parse_datetime(data["start_time"])
         end_time = dt.parse_datetime(data["end_time"])
-        duration = int((end_time - start_time).total_seconds() / 60)
-        
+
         return cls(
             start_time=start_time,
-            duration=duration,
+            end_time=end_time,
             price=data["price"],
-            unit=data["unit"]
+            unit=data.get(data["unit"], UOM_EUR_PER_KWH),
+            attributes=data.get("attributes", {}),
         )
 
 
-def compress_marketdata(data: List[Marketprice], duration: int) -> List[Marketprice]:
-    entries: List[Marketprice] = []
+def compress_marketdata(data: list[Marketprice], duration: int) -> list[Marketprice]:
+    entries: list[Marketprice] = []
     start: Marketprice = None
     for entry in data:
         if start is None:
@@ -73,8 +96,9 @@ def compress_marketdata(data: List[Marketprice], duration: int) -> List[Marketpr
         is_continuation = start.end_time == entry.start_time
         max_start_time = start.start_time + timedelta(minutes=duration)
         is_same_interval = entry.start_time < max_start_time
+        is_attributes_equal = start.attributes == entry.attributes
 
-        if is_price_equal and is_continuation and is_same_interval:
+        if is_price_equal and is_continuation and is_same_interval and is_attributes_equal:
             start.set_end_time(entry.end_time)
         else:
             entries.append(start)
@@ -85,8 +109,8 @@ def compress_marketdata(data: List[Marketprice], duration: int) -> List[Marketpr
 
 
 def average_marketdata(
-    data: List[Marketprice], target_duration: int
-) -> List[Marketprice]:
+    data: list[Marketprice], target_duration: int
+) -> list[Marketprice]:
     if not data:
         return []
 
@@ -94,16 +118,27 @@ def average_marketdata(
 
     group_size = target_duration // entry_duration
 
-    result: List[Marketprice] = []
+    result: list[Marketprice] = []
 
     for i in range(0, len(data), group_size):
         group = data[i : i + group_size]
 
         avg_price = round(sum(e._market_price_per_kwh for e in group) / len(group), 5)
         start = group[0]._start_time
+        unit = group[0]._unit
+
+        merged_attributes = {}
+        for e in group:
+            merged_attributes.update(e.attributes)
 
         result.append(
-            Marketprice(start_time=start, duration=target_duration, price=avg_price)
+            Marketprice(
+                start_time=start,
+                duration=target_duration,
+                price=avg_price,
+                unit=unit,
+                attributes=merged_attributes
+            )
         )
 
     return result

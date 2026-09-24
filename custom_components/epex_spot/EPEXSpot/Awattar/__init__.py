@@ -1,33 +1,15 @@
 """Awattar API."""
 
-from datetime import datetime, timedelta, timezone
 import logging
-from typing import List
+from datetime import datetime, timedelta, timezone
 
 import aiohttp
-
 from homeassistant.util import dt as dt_util
 
 from ...common import Marketprice, compress_marketdata
-from ...const import EUR_PER_MWH, UOM_EUR_PER_KWH
+from ...const import EUR_PER_MWH
 
 _LOGGER = logging.getLogger(__name__)
-
-
-class AwattarMarketprice(Marketprice):
-    """Marketprice class for Awattar."""
-
-    def __init__(self, data):
-        assert data["unit"].lower() == EUR_PER_MWH.lower()
-        self._start_time = datetime.fromtimestamp(
-            data["start_timestamp"] / 1000, tz=timezone.utc
-        )
-        self._end_time = datetime.fromtimestamp(
-            data["end_timestamp"] / 1000, tz=timezone.utc
-        )
-        self._market_price_per_kwh = round(float(data["marketprice"]) / 1000.0, 6)
-        self._unit = UOM_EUR_PER_KWH
-
 
 def toEpochMilliSec(dt: datetime) -> int:
     return int(dt.timestamp() * 1000)
@@ -38,6 +20,7 @@ class Awattar:
 
     MARKET_AREAS = ("at", "de")
     SUPPORTED_DURATIONS = (60,)
+    REQUIRES_TOKEN = False
 
     def __init__(self, market_area: str, duration: int, session: aiohttp.ClientSession):
         self._session = session
@@ -63,7 +46,7 @@ class Awattar:
         return "EUR"
 
     @property
-    def marketdata(self) -> List[Marketprice]:
+    def marketdata(self) -> list[Marketprice]:
         return self._marketdata
 
     async def fetch(self):
@@ -84,8 +67,18 @@ class Awattar:
             resp.raise_for_status()
             return await resp.json()
 
-    def _extract_marketdata(self, data) -> List[Marketprice]:
+    def _extract_marketdata(self, data) -> list[Marketprice]:
         entries = []
         for entry in data:
-            entries.append(AwattarMarketprice(entry))
+            assert entry["unit"].lower() == EUR_PER_MWH.lower()
+            start_time = datetime.fromtimestamp(entry["start_timestamp"] / 1000, tz=timezone.utc)
+            end_time = datetime.fromtimestamp(entry["end_timestamp"] / 1000, tz=timezone.utc)
+            price = round(float(entry["marketprice"]) / 1000.0, 6)
+            entries.append(
+                Marketprice(
+                    start_time=start_time,
+                    end_time=end_time,
+                    price=price
+                )
+            )
         return entries

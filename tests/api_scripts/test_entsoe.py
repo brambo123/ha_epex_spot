@@ -1,5 +1,6 @@
 import os
 import sys
+
 import aiohttp
 import pytest
 import time_machine
@@ -7,7 +8,9 @@ import time_machine
 # Dynamic path fix
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
-from custom_components.epex_spot.EPEXSpot import ENTSOE
+from custom_components.epex_spot.const import CONF_SOURCE_ENTSOE
+from custom_components.epex_spot.EPEXSpot import API_REGISTRY
+
 
 @pytest.mark.asyncio
 @time_machine.travel("2026-07-05 12:00:00 +00:00")  # Freeze time to July 5, 2026
@@ -63,7 +66,8 @@ async def test_entsoe_api_mock(mocker, mock_response):
 
     for duration in durations:
         async with aiohttp.ClientSession() as session:
-            service = ENTSOE.EntsoeTransparency(
+            api_class = API_REGISTRY[CONF_SOURCE_ENTSOE]
+            service = api_class(
                 market_area="FR",  # Will map via MARKET_AREA_MAP
                 duration=duration,
                 session=session,

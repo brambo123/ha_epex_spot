@@ -11,6 +11,7 @@ When writing or customizing your own templates, the integration exposes the foll
 * **`market_price`**: The raw EPEX spot market price per kWh as a floating-point number.
 * **`now()`**: A localized Home Assistant `datetime` object representing the specific hour/interval block being evaluated. 
   * *Tip:* This allows you to check the current hour (`now().hour`), month (`now().month`), or day of the week (`now().weekday()`) to build time-of-day or seasonal pricing.
+* **`attrs`**: A dictionary of attributes set by the API; Tibber, for example, passes the `attr.surcharge` variable.
 
 ---
 

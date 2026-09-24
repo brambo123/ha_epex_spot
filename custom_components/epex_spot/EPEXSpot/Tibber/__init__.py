@@ -4,8 +4,8 @@ from datetime import datetime
 
 import aiohttp
 
-from ...const import UOM_EUR_PER_KWH, TIBBER_DEMO_TOKEN
 from ...common import Marketprice
+from ...const import TIBBER_DEMO_TOKEN, UOM_EUR_PER_KWH
 
 TIBBER_QUERY = """
 {
@@ -40,6 +40,7 @@ class Tibber:
 
     MARKET_AREAS = ("de", "nl", "no", "se")
     SUPPORTED_DURATIONS = (15, 60)
+    REQUIRES_TOKEN = True
 
     def __init__(
         self,
@@ -103,8 +104,9 @@ class Tibber:
                     Marketprice(
                         duration=self._duration,
                         start_time=datetime.fromisoformat(entry["startsAt"]),
-                        price=round(float(entry["total"]), 6),
+                        price=round(float(entry["energy"]), 6),
                         unit=UOM_EUR_PER_KWH,
+                        attributes={"surcharge": round(float(entry["tax"]), 6)}
                     )
                 )
 
@@ -114,8 +116,9 @@ class Tibber:
                     Marketprice(
                         duration=self._duration,
                         start_time=datetime.fromisoformat(entry["startsAt"]),
-                        price=round(float(entry["total"]), 6),
+                        price=round(float(entry["energy"]), 6),
                         unit=UOM_EUR_PER_KWH,
+                        attributes={"surcharge": round(float(entry["tax"]), 6)}
                     )
                 )
 

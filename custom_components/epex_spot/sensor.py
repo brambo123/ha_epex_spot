@@ -9,6 +9,8 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.helpers.typing import StateType
 
+from . import EpexSpotDataUpdateCoordinator as DataUpdateCoordinator
+from . import EpexSpotEntity
 from .const import (
     ATTR_BUY_VOLUME_MWH,
     ATTR_DATA,
@@ -18,11 +20,10 @@ from .const import (
     ATTR_SELL_VOLUME_MWH,
     ATTR_START_TIME,
     ATTR_VOLUME_MWH,
-    CONF_TEMPLATE_IMPORT,
     CONF_TEMPLATE_EXPORT,
+    CONF_TEMPLATE_IMPORT,
     DOMAIN,
 )
-from . import EpexSpotEntity, EpexSpotDataUpdateCoordinator as DataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -116,7 +117,7 @@ class EpexSpotTotalPriceSensorEntity(EpexSpotEntity, SensorEntity):
         if not self._source.marketdata_now:
             return None
         return self._source.to_total_price(
-            self._source.marketdata_now.market_price_per_kwh
+            self._source.marketdata_now
         )
 
     @property
@@ -127,9 +128,7 @@ class EpexSpotTotalPriceSensorEntity(EpexSpotEntity, SensorEntity):
             {
                 ATTR_START_TIME: dt_util.as_local(e.start_time).isoformat(),
                 ATTR_END_TIME: dt_util.as_local(e.end_time).isoformat(),
-                self._localized.attr_name_per_kwh: self._source.to_total_price(
-                    e.market_price_per_kwh
-                ),
+                self._localized.attr_name_per_kwh: self._source.to_total_price(e),
             }
             for e in self._source.marketdata
         ]
@@ -155,10 +154,7 @@ class EpexSpotImportPriceSensorEntity(EpexSpotEntity, SensorEntity):
     def native_value(self) -> StateType:
         if not self._source.marketdata_now:
             return None
-        return self._source.get_import_price(
-            self._source.marketdata_now.market_price_per_kwh,
-            self._source.marketdata_now.start_time
-        )
+        return self._source.get_import_price(self._source.marketdata_now)
 
     @property
     def extra_state_attributes(self):
@@ -168,10 +164,7 @@ class EpexSpotImportPriceSensorEntity(EpexSpotEntity, SensorEntity):
             {
                 ATTR_START_TIME: dt_util.as_local(e.start_time).isoformat(),
                 ATTR_END_TIME: dt_util.as_local(e.end_time).isoformat(),
-                self._localized.attr_name_per_kwh: self._source.get_import_price(
-                    e.market_price_per_kwh,
-                    e.start_time
-                ),
+                self._localized.attr_name_per_kwh: self._source.get_import_price(e),
             }
             for e in self._source.marketdata
         ]
@@ -198,10 +191,7 @@ class EpexSpotExportPriceSensorEntity(EpexSpotEntity, SensorEntity):
     def native_value(self) -> StateType:
         if not self._source.marketdata_now:
             return None
-        return self._source.get_export_price(
-            self._source.marketdata_now.market_price_per_kwh,
-            self._source.marketdata_now.start_time
-        )
+        return self._source.get_export_price(self._source.marketdata_now)
 
     @property
     def extra_state_attributes(self):
@@ -211,10 +201,7 @@ class EpexSpotExportPriceSensorEntity(EpexSpotEntity, SensorEntity):
             {
                 ATTR_START_TIME: dt_util.as_local(e.start_time).isoformat(),
                 ATTR_END_TIME: dt_util.as_local(e.end_time).isoformat(),
-                self._localized.attr_name_per_kwh: self._source.get_export_price(
-                    e.market_price_per_kwh,
-                    e.start_time
-                ),
+                self._localized.attr_name_per_kwh: self._source.get_export_price(e),
             }
             for e in self._source.marketdata
         ]

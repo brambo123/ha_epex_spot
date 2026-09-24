@@ -3,10 +3,12 @@
 import asyncio
 import logging
 import random
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
+import aiohttp
+import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DEVICE_ID, Platform
 from homeassistant.core import (
@@ -17,19 +19,20 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import (
     DeviceEntryType,
     DeviceInfo,
+)
+from homeassistant.helpers.device_registry import (
     async_get as dr_async_get,
 )
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.event import async_track_time_change
+from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
-from homeassistant.helpers.storage import Store
 from homeassistant.util import dt
 
 from .const import (
@@ -39,6 +42,7 @@ from .const import (
     CONF_EARLIEST_START_TIME,
     CONF_LATEST_END_POST,
     CONF_LATEST_END_TIME,
+    CONF_PRICE_TYPE,
     CONF_SURCHARGE_ABS,
     CONFIG_VERSION,
     DOMAIN,
@@ -58,6 +62,9 @@ GET_EXTREME_PRICE_INTERVAL_SCHEMA = vol.Schema(
         vol.Optional(CONF_LATEST_END_TIME): cv.time,
         vol.Optional(CONF_LATEST_END_POST): cv.positive_int,
         vol.Required(CONF_DURATION): cv.positive_time_period,
+        vol.Optional(CONF_PRICE_TYPE, default="market_price"): vol.In(
+            ["market_price", "total_price", "import_price", "export_price"]
+        ),
     }
 )
 FETCH_DATA_SCHEMA = vol.Schema(
@@ -74,25 +81,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await source.async_load_cache()
     source.update_time()
-    if not source.has_data_today:
-        await source.async_load_backup_cache()
-        source.update_time()
 
     coordinator = EpexSpotDataUpdateCoordinator(hass, source=source)
 
-    if source.has_data_today:
-        coordinator.async_set_updated_data(None)
-    else:
+    if not coordinator.source.has_data_today:
         try:
             await coordinator.source.fetch()
             await coordinator.source.async_save_cache()
             coordinator.source.update_time()
-            coordinator.async_set_updated_data(None)
-        except Exception as err:  # pylint: disable=broad-except
+            if not coordinator.source.has_data_today:
+                await coordinator.source.async_load_backup_cache()
+
+        except (aiohttp.ClientError, TimeoutError, ValueError):
+            await coordinator.source.async_load_backup_cache()
+
+        except Exception as err:  # noqa: BLE001
             ex = ConfigEntryNotReady()
             ex.__cause__ = err
             raise ex
 
+    coordinator.source.update_time()
+    coordinator.async_set_updated_data(None)
+    
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -204,7 +214,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     try:
         store = Store(hass, 1, f"epex_spot.{entry.entry_id}")
         await store.async_remove()
-    except Exception as err:  # pylint: disable=broad-except
+    except Exception as err:  # noqa: BLE001
         _LOGGER.error(f"Error removing EPEX Spot storage cache: {err}")
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
@@ -275,7 +285,7 @@ class EpexSpotDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             await self.source.fetch()
             self._error_count = 0
             await self.source.async_save_cache()
-        except Exception as err:  # pylint: disable=broad-except
+        except Exception as err:  # noqa: BLE001
             self._error_count += 1
             if self._error_count >= 3:
                 _LOGGER.warning(
@@ -286,7 +296,7 @@ class EpexSpotDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 _LOGGER.info(f"Fetch attempt {self._error_count} failed for {self.source.name}: {err}")
 
         # Try backup
-        if not self.source.has_data_today or (not self.source.has_data_tomorrow and dt.now().hour > 20):
+        if not self.source.has_data_today or (not self.source.has_data_tomorrow and dt.now().hour >= 16):
             await self.source.async_load_backup_cache()
 
 

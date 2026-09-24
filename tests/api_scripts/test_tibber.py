@@ -1,12 +1,14 @@
 import os
 import sys
+
 import aiohttp
 import pytest
 import time_machine
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
-from custom_components.epex_spot.EPEXSpot import Tibber
+from custom_components.epex_spot.const import CONF_SOURCE_TIBBER
+from custom_components.epex_spot.EPEXSpot import API_REGISTRY
 
 
 @pytest.mark.asyncio
@@ -27,13 +29,17 @@ async def test_tibber_api_mock(mocker, mock_response):
                                     "today": [
                                         {
                                             "startsAt": "2026-07-05T12:00:00+02:00",
-                                            "total": 0.254
+                                            "energy": 0.254,
+                                            "tax": 0.0251,
+                                            "total": 0.2791
                                         }
                                     ],
                                     "tomorrow": [
                                         {
                                             "startsAt": "2026-07-06T12:00:00+02:00",
-                                            "total": 0.281
+                                            "energy": 0.281,
+                                            "tax": 0.0251,
+                                            "total": 0.3061
                                         }
                                     ]
                                 }
@@ -49,7 +55,8 @@ async def test_tibber_api_mock(mocker, mock_response):
         post_mock = mocker.patch("aiohttp.ClientSession.post", return_value=resp)
 
         async with aiohttp.ClientSession() as session:
-            service = Tibber.Tibber(
+            api_class = API_REGISTRY[CONF_SOURCE_TIBBER]
+            service = api_class(
                 market_area="de",
                 token="test_token",
                 duration=duration,

@@ -4,13 +4,16 @@
       "already_configured": "This market area is already configured.",
       "fetch_failed": "Failed to fetch data."
     },
+    "error": {
+      "invalid_auth": "API connection failed. Check token and try again."
+    },
     "step": {
-      "source": {
+      "user": {
         "data": {
           "source": "Select data source"
         }
       },
-      "market_area": {
+      "source": {
         "data": {
           "market_area": "Select market area",
           "duration": "Slot duration",
@@ -20,6 +23,9 @@
     }
   },
   "options": {
+    "error": {
+      "invalid_auth": "API connection failed. Check token and try again."
+    },
     "step": {
       "init": {
         "title": "Epex Spot Options",
@@ -72,6 +78,10 @@
           "description": "Required duration to complete appliance.",
           "name": "Duration",
           "example": "01:30:00"
+        },
+        "price_type": {
+          "description": "Which price type to evaluate: market_price, total_price, import_price or export_price.",
+          "name": "Price Type"
         }
       },
       "name": "Get lowest price interval"
@@ -107,6 +117,10 @@
           "description": "Required duration to complete appliance.",
           "name": "Duration",
           "example": "01:30:00"
+        },
+        "price_type": {
+          "description": "Which price type to evaluate: market_price, total_price, import_price or export_price.",
+          "name": "Price Type"
         }
       },
       "name": "Get highest price interval"

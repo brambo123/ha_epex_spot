@@ -1,12 +1,14 @@
 import os
 import sys
+
 import aiohttp
 import pytest
 import time_machine
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
-from custom_components.epex_spot.EPEXSpot import Nordpool
+from custom_components.epex_spot.const import CONF_SOURCE_NORDPOOL
+from custom_components.epex_spot.EPEXSpot import API_REGISTRY
 
 
 @pytest.mark.asyncio
@@ -47,7 +49,8 @@ async def test_nordpool_api_mock(mocker, mock_response):
         get_mock = mocker.patch("aiohttp.ClientSession.get", side_effect=[resp_today, resp_tomorrow])
 
         async with aiohttp.ClientSession() as session:
-            service = Nordpool.Nordpool(
+            api_class = API_REGISTRY[CONF_SOURCE_NORDPOOL]
+            service = api_class(
                 market_area="NL",
                 duration=duration,
                 session=session
@@ -68,7 +71,7 @@ async def test_nordpool_api_mock(mocker, mock_response):
             assert params_today["resolutionInMinutes"] == duration
             
             # Validate query parameters of the second call (Tomorrow)
-            call_tomorrow_args, call_tomorrow_kwargs = get_mock.call_args_list[1]
+            _, call_tomorrow_kwargs = get_mock.call_args_list[1]
             assert call_tomorrow_kwargs["params"]["date"] == "2026-07-06"
             
             # Validate combined market data entries

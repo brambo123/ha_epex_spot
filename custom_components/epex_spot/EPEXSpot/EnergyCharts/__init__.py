@@ -1,9 +1,10 @@
 """Energy-Charts API Client."""
 
-from datetime import date, datetime, timezone, timedelta
 import logging
+from datetime import datetime, timedelta, timezone
+
 import aiohttp
-from typing import List
+from homeassistant.util import dt as dt_util
 
 from ...common import Marketprice, average_marketdata
 
@@ -64,8 +65,8 @@ class EnergyCharts:
     URL = "https://api.energy-charts.info/price"
 
     MARKET_AREAS = BIDDING_ZONES
-
     SUPPORTED_DURATIONS = (15, 60)
+    REQUIRES_TOKEN = False
 
     def __init__(self, market_area: str, duration: int, session: aiohttp.ClientSession):
         if market_area not in self.MARKET_AREAS:
@@ -77,7 +78,7 @@ class EnergyCharts:
         self._session = session
         self._market_area = market_area
         self._duration = duration
-        self._marketdata: List[Marketprice] = []
+        self._marketdata: list[Marketprice] = []
 
     @property
     def name(self):
@@ -142,7 +143,7 @@ class EnergyCharts:
 
     async def _fetch_data(self):
         # Compute start = today, end = tomorrow (daily format)
-        start_date = date.today()
+        start_date = dt_util.now().date()
         end_date = start_date + timedelta(days=1)
 
         params = {
@@ -160,8 +161,8 @@ class EnergyCharts:
     #
     def _extract_marketdata(
         self, unix_seconds, prices, duration, unit
-    ) -> List[Marketprice]:
-        entries: List[Marketprice] = []
+    ) -> list[Marketprice]:
+        entries: list[Marketprice] = []
 
         for ts, price_mwh in zip(unix_seconds, prices):
             if price_mwh:
