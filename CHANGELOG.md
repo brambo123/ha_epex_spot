@@ -7,7 +7,13 @@ All notable changes to the EPEX Spot integration will be documented in this file
 
 ---
 
-## [5.0.1]
+## [5.0.2] - 2026-10-26
+
+### 🛠️ Improvements & Optimizations
+* **Tibber** - Scan all homes for available data, not just the first one (fixes #13).
+* **Local brand assets** - Include local brand logo's (Thanks to @frenck).
+
+## [5.0.1] - 2026-09-24
 
 ### 📢 Important change
 * The **Tibber API** now retrieves the bare market price, but still uses the tax information to calculate the total price.

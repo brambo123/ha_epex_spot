@@ -1,11 +1,14 @@
 """Tibber API."""
 
+import logging
 from datetime import datetime
 
 import aiohttp
 
 from ...common import Marketprice
 from ...const import TIBBER_DEMO_TOKEN, UOM_EUR_PER_KWH
+
+_LOGGER = logging.getLogger(__name__)
 
 TIBBER_QUERY = """
 {
@@ -77,8 +80,21 @@ class Tibber:
 
     async def fetch(self):
         data = await self._fetch_data(self.URL)
+        
+        active_home = next(
+            (
+                home for home in data["data"]["viewer"]["homes"]
+                if home.get("currentSubscription") and home["currentSubscription"].get("priceInfo")
+            ),
+            None
+        )
+
+        if not active_home:
+            _LOGGER.error("No active Tibber subscription with priceInfo found")
+            return
+
         self._marketdata = self._extract_marketdata(
-            data["data"]["viewer"]["homes"][0]["currentSubscription"]["priceInfo"]
+            active_home["currentSubscription"]["priceInfo"]
         )
 
     async def _fetch_data(self, url):

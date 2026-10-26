@@ -24,6 +24,9 @@ async def test_tibber_api_mock(mocker, mock_response):
                 "viewer": {
                     "homes": [
                         {
+                            "currentSubscription": None
+                        },
+                        {
                             "currentSubscription": {
                                 "priceInfo": {
                                     "today": [
