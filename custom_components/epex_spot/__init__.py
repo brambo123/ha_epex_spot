@@ -285,6 +285,7 @@ class EpexSpotDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             await self.source.fetch()
             self._error_count = 0
             await self.source.async_save_cache()
+            self.source.update_time()
         except Exception as err:  # noqa: BLE001
             self._error_count += 1
             if self._error_count >= 3:

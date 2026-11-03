@@ -7,6 +7,11 @@ All notable changes to the EPEX Spot integration will be documented in this file
 
 ---
 
+## [Unreleased]
+
+### 🛠️ Improvements & Optimizations
+* **Fallback support** - Recalculate the today/tomorrow data flags right after a successful fetch, so prices arriving late in the day are no longer replaced by the fallback cache (fixes #14).
+
 ## [5.0.2] - 2026-10-26
 
 ### 🛠️ Improvements & Optimizations
