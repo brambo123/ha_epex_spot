@@ -3,7 +3,7 @@
 import enum
 import logging
 import xml.etree.ElementTree as ET
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import aiohttp
 
@@ -123,7 +123,7 @@ class EntsoeTransparency:
 
     async def _fetch_day_ahead(self) -> list[Marketprice]:
         """Fetch day-ahead electricity prices (A44)."""
-        now = datetime.now(timezone.utc)  # Align to full hour
+        now = datetime.now(UTC)  # Align to full hour
         start_dt = now.replace(minute=0, second=0, microsecond=0)
         end_dt = start_dt + timedelta(days=2)  # next 2 days
         params = {
@@ -184,7 +184,7 @@ class EntsoeTransparency:
                 time_interval = period.find("ns:timeInterval", ns)
                 start_str = time_interval.find("ns:start", ns).text
                 start_dt = datetime.strptime(start_str, "%Y-%m-%dT%H:%MZ").replace(
-                    tzinfo=timezone.utc
+                    tzinfo=UTC
                 )
 
                 # Ensure we parse a period only ones

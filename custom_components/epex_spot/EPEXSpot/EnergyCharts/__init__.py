@@ -1,7 +1,7 @@
 """Energy-Charts API Client."""
 
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import aiohttp
 from homeassistant.util import dt as dt_util
@@ -166,7 +166,7 @@ class EnergyCharts:
 
         for ts, price_mwh in zip(unix_seconds, prices):
             if price_mwh:
-                start_time = datetime.fromtimestamp(ts, tz=timezone.utc)
+                start_time = datetime.fromtimestamp(ts, tz=UTC)
                 price_kwh = float(price_mwh) / 1000.0
 
                 entries.append(

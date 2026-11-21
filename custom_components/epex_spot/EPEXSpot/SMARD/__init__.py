@@ -1,7 +1,7 @@
 """SMARD.de API."""
 
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import aiohttp
 from homeassistant.util import dt as dt_util
@@ -90,7 +90,7 @@ class SMARD:
                     entries.append(
                         Marketprice(
                             start_time=datetime.fromtimestamp(
-                                entry[0] / 1000, tz=timezone.utc
+                                entry[0] / 1000, tz=UTC
                             ),
                             duration=self._duration,
                             price=round(float(entry[1]) / 1000.0, 6),

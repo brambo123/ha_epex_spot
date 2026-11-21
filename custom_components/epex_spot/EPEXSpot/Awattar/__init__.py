@@ -1,7 +1,7 @@
 """Awattar API."""
 
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import aiohttp
 from homeassistant.util import dt as dt_util
@@ -71,8 +71,8 @@ class Awattar:
         entries = []
         for entry in data:
             assert entry["unit"].lower() == EUR_PER_MWH.lower()
-            start_time = datetime.fromtimestamp(entry["start_timestamp"] / 1000, tz=timezone.utc)
-            end_time = datetime.fromtimestamp(entry["end_timestamp"] / 1000, tz=timezone.utc)
+            start_time = datetime.fromtimestamp(entry["start_timestamp"] / 1000, tz=UTC)
+            end_time = datetime.fromtimestamp(entry["end_timestamp"] / 1000, tz=UTC)
             price = round(float(entry["marketprice"]) / 1000.0, 6)
             entries.append(
                 Marketprice(
