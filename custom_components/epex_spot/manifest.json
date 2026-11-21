@@ -1,6 +1,9 @@
 {
   "domain": "epex_spot",
   "name": "EPEX Spot",
+  "categories": [
+    "energy.energy_prices"
+  ],
   "codeowners": [
     "@mampfes",
     "@brambo123"
@@ -9,9 +12,6 @@
   "dependencies": [],
   "documentation": "https://github.com/brambo123/ha_epex_spot",
   "integration_type": "service",
-  "categories": [
-    "energy.energy_prices"
-  ],
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/brambo123/ha_epex_spot/issues",
   "requirements": [],
