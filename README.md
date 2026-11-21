@@ -1,7 +1,5 @@
 # EPEX Spot
 
-[![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg)](https://github.com/custom-components/hacs)
-
 This component adds electricity prices from stock exchange [EPEX Spot](https://www.epexspot.com) to Home Assistant. [EPEX Spot](https://www.epexspot.com) does not provide free access to the data, so this component uses different ways to retrieve the data.
 
 > [!NOTE]
@@ -55,22 +53,20 @@ If you like this component, please give it a star on [github](https://github.com
 
 ## Installation
 
-1. Ensure that [HACS](https://hacs.xyz) is installed.
+1. Install **EPEX Spot** integration:
 
-2. Install **EPEX Spot** integration via HACS:
+   [![Open your Home Assistant instance and open a repository in the Marketplace.](https://my.home-assistant.io/badges/marketplace_repository.svg)](https://my.home-assistant.io/redirect/marketplace_repository/?category=integration&owner=brambo123&repository=ha_epex_spot)
 
-   [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=brambo123&repository=ha_epex_spot)
+2. Add **EPEX Spot** integration to Home Assistant:
 
-3. Add **EPEX Spot** integration to Home Assistant:
-
-   [![Open your Home Assistant instance and start setting up a new integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start?domain=epex_spot)
+   [![Open your Home Assistant instance and start setting up a new integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=epex_spot)
 
 In case you would like to install manually:
 
 1. Copy the folder `custom_components/epex_spot` to `custom_components` in your Home Assistant `config` folder.
 2. Add **EPEX Spot** integration to Home Assistant:
 
-   [![Open your Home Assistant instance and start setting up a new integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start?domain=epex_spot)
+   [![Open your Home Assistant instance and start setting up a new integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=epex_spot)
 
 ## 🔄 Fallback Source (Backup Mechanism)
 
@@ -407,7 +403,7 @@ epex_spot.fetch_data
 
 ### 3. The EPEX Spot Sensor Integration
 
-A significantly easier, GUI-based method to achieve some of the results listed above is to install the [EPEX Spot Sensor](https://github.com/mampfes/ha_epex_spot_sensor "EPEX Spot Sensor") integration (via HACS) and configure helpers with it. An example for this method is covered in FAQ 2 below.
+A significantly easier, GUI-based method to achieve some of the results listed above is to install the [EPEX Spot Sensor](https://github.com/mampfes/ha_epex_spot_sensor "EPEX Spot Sensor") integration and configure helpers with it. An example for this method is covered in FAQ 2 below.
 
 ## FAQ
 
@@ -417,7 +413,7 @@ With [ApexCharts](https://github.com/RomRider/apexcharts-card), you can easily s
 
 ![apexchart](/images/apexcharts.png)
 
-You just have to install [ApexCharts](https://github.com/RomRider/apexcharts-card) (via HACS) and enter the following data in the card configuration:
+You just have to install [ApexCharts](https://github.com/RomRider/apexcharts-card) and enter the following data in the card configuration:
 
 ```yaml
 type: custom:apexcharts-card
@@ -453,7 +449,7 @@ If you are using a different source, you will need to first update `sensor.epex_
 
 ### 2. How can I optimise the best moment to start appliances?
 
-It might be an interesting use case to know what the hours with lowest consecutive prices during the day are. This might be of value when looking for the most optimum time to start your washing machine, dishwasher, dryer, etc. The most convenient way to do this would be to install and configure the [EPEX Spot Sensor](https://github.com/mampfes/ha_epex_spot_sensor "EPEX Spot Sensor") (via HACS).
+It might be an interesting use case to know what the hours with lowest consecutive prices during the day are. This might be of value when looking for the most optimum time to start your washing machine, dishwasher, dryer, etc. The most convenient way to do this would be to install and configure the [EPEX Spot Sensor](https://github.com/mampfes/ha_epex_spot_sensor "EPEX Spot Sensor").
 
 #### Example 1: Manually starting / scheduling a "dumb" dishwasher\*\*
 
