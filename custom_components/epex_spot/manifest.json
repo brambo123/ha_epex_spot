@@ -8,8 +8,12 @@
   "config_flow": true,
   "dependencies": [],
   "documentation": "https://github.com/brambo123/ha_epex_spot",
+  "integration_type": "service",
+  "categories": [
+    "energy.energy_prices"
+  ],
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/brambo123/ha_epex_spot/issues",
   "requirements": [],
-  "version": "5.0.2"
+  "version": "5.0.3"
 }
